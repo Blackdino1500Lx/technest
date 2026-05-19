@@ -10,41 +10,42 @@ import StudentLogin  from './pages/StudentLogin'
 
 type View = 'landing' | 'auth' | 'paywall' | 'portal' | 'student'
 
+const withTimeout = <T,>(promise: Promise<T>, ms = 5000): Promise<T> =>
+  Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
+
 export default function App() {
   const [view,    setView]    = useState<View>('landing')
   const [profile, setProfile] = useState<TeacherProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const resolveView = (p: TeacherProfile | null) => {
-    if (!p) return 'landing'
-    return p.plan === 'free' ? 'paywall' : 'portal'
-  }
+  const resolveView = (p: TeacherProfile | null) =>
+    !p ? 'landing' : p.plan === 'free' ? 'paywall' : 'portal'
 
   useEffect(() => {
-    auth.getSession()
+    withTimeout(auth.getSession())
       .then(async s => {
         if (s) {
-          const p = await auth.getProfile()
+          const p = await withTimeout(auth.getProfile())
           setProfile(p)
           if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
-          setView(resolveView(p))
+          setView(resolveView(p) as View)
         }
       })
-      .catch(() => {/* silencioso — queda en landing */})
+      .catch(() => {})
       .finally(() => setLoading(false))
 
     return auth.onAuthChange(async s => {
       try {
         if (s) {
-          const p = await auth.getProfile()
+          const p = await withTimeout(auth.getProfile())
           setProfile(p)
           if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
-          setView(resolveView(p))
+          setView(resolveView(p) as View)
         } else {
           setProfile(null)
           setView('landing')
         }
-      } catch {/* silencioso */}
+      } catch { setLoading(false) }
     })
   }, [])
 
