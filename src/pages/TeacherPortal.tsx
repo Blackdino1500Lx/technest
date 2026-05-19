@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { db } from '../lib/db'
 import { auth } from '../lib/auth'
 import type { TeacherProfile, Student, Lesson, Practice, Submission, Grade, Level, Subject } from '../lib/types'
-import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Library, ExternalLink } from 'lucide-react'
+import CreatePracticeModal from './CreatePracticeModal'
 
 interface Props {
   profile: TeacherProfile
@@ -10,7 +11,7 @@ interface Props {
   onSignOut: () => void
 }
 
-type Tab = 'students' | 'lessons' | 'practices' | 'reviews' | 'settings'
+type Tab = 'students' | 'library' | 'lessons' | 'practices' | 'reviews' | 'settings'
 const GRADES: Grade[] = ['7° Grado','8° Grado','9° Grado','10° Grado','11° Grado','Universitario','Adulto']
 const LEVELS: Level[] = ['Básico','Intermedio','Avanzado']
 const SUBJECTS: Subject[] = ['Matemáticas','Español','Ciencias','Estudios Sociales','Inglés']
@@ -46,6 +47,7 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
         <nav className="sidebar-nav">
           {([
             ['students',  'Alumnos',    <Users size={18}/>],
+            ['library',   'Biblioteca', <Library size={18}/>],
             ['lessons',   'Lecciones',  <BookOpen size={18}/>],
             ['practices', 'Prácticas',  <FileText size={18}/>],
             ['reviews',   'Revisiones', <ClipboardList size={18}/>],
@@ -64,6 +66,7 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
         {loading ? <div className="portal-loading"><div className="spinner"/></div> : (
           <>
             {tab === 'students'  && <StudentsTab  students={students}  onReload={loadAll} profile={profile}/>}
+            {tab === 'library'   && <LibraryTab   lessons={lessons} students={students} onReload={loadAll}/>}
             {tab === 'lessons'   && <LessonsTab   lessons={lessons}    students={students} onReload={loadAll}/>}
             {tab === 'practices' && <PracticesTab practices={practices} students={students} onReload={loadAll}/>}
             {tab === 'reviews'   && <ReviewsTab   subs={subs} students={students} practices={practices} onReload={loadAll}/>}
@@ -78,20 +81,28 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
 // ── STUDENTS TAB ─────────────────────────────────────────────────────
 function StudentsTab({ students, onReload, profile }: { students: Student[]; onReload: () => void; profile: TeacherProfile }) {
   const [showForm, setShowForm] = useState(false)
-  const [fn, setFn] = useState(''); const [ln, setLn] = useState('')
+  const [editId, setEditId]     = useState<string|null>(null)
+  const [fn, setFn]   = useState(''); const [ln, setLn] = useState('')
   const [grade, setGrade] = useState<Grade>('10° Grado')
   const [level, setLevel] = useState<Level>('Básico')
+  const [pin, setPin]     = useState(() => Math.floor(1000+Math.random()*9000).toString())
   const [saving, setSaving] = useState(false)
+  const genPin = () => Math.floor(1000+Math.random()*9000).toString()
 
-  const genPin = () => Math.floor(1000 + Math.random() * 9000).toString()
-  const [pin, setPin] = useState(genPin)
+  const openNew = () => { setEditId(null); setFn(''); setLn(''); setGrade('10° Grado'); setLevel('Básico'); setPin(genPin()); setShowForm(true) }
+  const openEdit = (s: Student) => { setEditId(s.id); setFn(s.firstName); setLn(s.lastName); setGrade(s.grade); setLevel(s.level); setPin(s.pin); setShowForm(true) }
+  const cancel = () => { setShowForm(false); setEditId(null) }
 
   const save = async () => {
     if (!fn.trim() || !ln.trim()) return
     setSaving(true)
     try {
-      await db.students.add({ firstName: fn, lastName: ln, grade, level, pin })
-      setFn(''); setLn(''); setPin(genPin()); setShowForm(false); onReload()
+      if (editId) {
+        await db.students.update({ id: editId, firstName: fn, lastName: ln, grade, level, pin })
+      } else {
+        await db.students.add({ firstName: fn, lastName: ln, grade, level, pin, teacherId: '' })
+      }
+      cancel(); onReload()
     } finally { setSaving(false) }
   }
 
@@ -101,14 +112,15 @@ function StudentsTab({ students, onReload, profile }: { students: Student[]; onR
     <div className="tab-content">
       <div className="tab-header">
         <h2>Alumnos ({students.length}/{profile.studentsLimit})</h2>
-        <button className="btn-primary" onClick={() => setShowForm(v => !v)} disabled={atLimit}>
+        <button className="btn-primary" onClick={openNew} disabled={atLimit && !editId}>
           <Plus size={14}/> Nuevo alumno
         </button>
       </div>
-      {atLimit && <div className="limit-warning">Alcanzaste el límite de alumnos. Mejorá tu plan para agregar más.</div>}
+      {atLimit && !editId && <div className="limit-warning">Alcanzaste el límite de alumnos. Mejorá tu plan para agregar más.</div>}
 
       {showForm && (
         <div className="form-card">
+          <h3>{editId ? 'Editar alumno' : 'Nuevo alumno'}</h3>
           <div className="form-row">
             <div className="field"><label>Nombre</label><input value={fn} onChange={e => setFn(e.target.value)}/></div>
             <div className="field"><label>Apellido</label><input value={ln} onChange={e => setLn(e.target.value)}/></div>
@@ -132,7 +144,7 @@ function StudentsTab({ students, onReload, profile }: { students: Student[]; onR
             </div>
           </div>
           <div className="form-actions">
-            <button className="btn-outline" onClick={() => setShowForm(false)}>Cancelar</button>
+            <button className="btn-outline" onClick={cancel}>Cancelar</button>
             <button className="btn-primary" onClick={save} disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
           </div>
         </div>
@@ -148,6 +160,7 @@ function StudentsTab({ students, onReload, profile }: { students: Student[]; onR
                 <span>{s.grade} · {s.level}</span>
               </div>
               <span className="pin-display">🔒 PIN: {s.pin}</span>
+              <button className="icon-btn" onClick={() => openEdit(s)}><Pencil size={14}/></button>
               <button className="icon-btn danger" onClick={async () => { await db.students.delete(s.id); onReload() }}><Trash2 size={14}/></button>
             </div>
           ))
@@ -157,27 +170,105 @@ function StudentsTab({ students, onReload, profile }: { students: Student[]; onR
   )
 }
 
+// ── LIBRARY TAB ──────────────────────────────────────────────────────
+function LibraryTab({ lessons, students, onReload }: { lessons: Lesson[]; students: Student[]; onReload: () => void }) {
+  const withFile = lessons.filter(l => l.fileUrl)
+  const [assigning, setAssigning] = useState<string|null>(null)
+  const [assigned, setAssigned]   = useState<string[]>([])
+  const [saving, setSaving]       = useState(false)
+
+  const openAssign = (l: Lesson) => { setAssigning(l.id); setAssigned(l.assignedTo) }
+
+  const saveAssign = async (l: Lesson) => {
+    setSaving(true)
+    try { await db.lessons.update({ ...l, assignedTo: assigned }); setAssigning(null); onReload() }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="tab-content">
+      <div className="tab-header"><h2>Biblioteca ({withFile.length})</h2></div>
+      {withFile.length === 0
+        ? <p className="empty-msg">No hay archivos subidos. Adjuntá PDFs desde la pestaña Lecciones.</p>
+        : <div className="cards-grid">
+            {withFile.map(l => (
+              <div key={l.id} className="lesson-card">
+                <div className="lesson-card-top">
+                  <span className="subject-badge">{l.subject}</span>
+                  <span className={`status-dot ${l.isActive?'active':''}`}/>
+                </div>
+                <h3>{l.title}</h3>
+                <p className="lesson-yt">📄 {l.fileName ?? 'Archivo adjunto'}</p>
+                <p className="lesson-students">👥 {l.assignedTo.length} alumno{l.assignedTo.length!==1?'s':''}</p>
+
+                {assigning === l.id ? (
+                  <div style={{marginTop:'.5rem'}}>
+                    <div className="chip-grid">
+                      {students.map(s => (
+                        <label key={s.id} className={`chip ${assigned.includes(s.id)?'selected':''}`}>
+                          <input type="checkbox" checked={assigned.includes(s.id)}
+                            onChange={e => setAssigned(p => e.target.checked ? [...p,s.id] : p.filter(x=>x!==s.id))}/>
+                          {s.firstName} {s.lastName}
+                        </label>
+                      ))}
+                    </div>
+                    <div className="form-actions" style={{marginTop:'.5rem'}}>
+                      <button className="btn-outline" onClick={() => setAssigning(null)}>Cancelar</button>
+                      <button className="btn-primary" onClick={() => saveAssign(l)} disabled={saving}>Guardar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{display:'flex',gap:'.5rem',marginTop:'auto',flexWrap:'wrap'}}>
+                    <a href={l.fileUrl} target="_blank" rel="noreferrer" className="btn-danger-sm" style={{textDecoration:'none',display:'flex',alignItems:'center',gap:'.3rem'}}>
+                      <ExternalLink size={12}/> Ver archivo
+                    </a>
+                    <button className="btn-danger-sm" style={{borderColor:'#c7d2fe',background:'#eef2ff',color:'#4338ca'}} onClick={() => openAssign(l)}>
+                      Asignar alumnos
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+      }
+    </div>
+  )
+}
+
 // ── LESSONS TAB ──────────────────────────────────────────────────────
 function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; students: Student[]; onReload: () => void }) {
   const [showForm, setShowForm] = useState(false)
-  const [title, setTitle]       = useState('')
-  const [subject, setSubject]   = useState<Subject>('Matemáticas')
-  const [content, setContent]   = useState('')
-  const [ytUrl, setYtUrl]       = useState('')
+  const [editLesson, setEditLesson] = useState<Lesson|null>(null)
+  const [title, setTitle]     = useState('')
+  const [subject, setSubject] = useState<Subject>('Matemáticas')
+  const [content, setContent] = useState('')
+  const [ytUrl, setYtUrl]     = useState('')
   const [assigned, setAssigned] = useState<string[]>([])
   const [pdfFile, setPdfFile]   = useState<File|null>(null)
   const [saving, setSaving]     = useState(false)
 
+  const openNew = () => {
+    setEditLesson(null); setTitle(''); setSubject('Matemáticas')
+    setContent(''); setYtUrl(''); setAssigned([]); setPdfFile(null); setShowForm(true)
+  }
+  const openEdit = (l: Lesson) => {
+    setEditLesson(l); setTitle(l.title); setSubject(l.subject)
+    setContent(l.content ?? ''); setYtUrl(l.youtubeUrl ?? '')
+    setAssigned(l.assignedTo); setPdfFile(null); setShowForm(true)
+  }
+  const cancel = () => { setShowForm(false); setEditLesson(null) }
+
   const save = async () => {
     if (!title.trim()) return; setSaving(true)
     try {
-      let fileUrl: string | undefined; let fileName: string | undefined
-      if (pdfFile) {
-        const uploaded = await db.storage.uploadFile(pdfFile)
-        fileUrl = uploaded.url; fileName = uploaded.name
+      let fileUrl = editLesson?.fileUrl; let fileName = editLesson?.fileName
+      if (pdfFile) { const up = await db.storage.uploadFile(pdfFile); fileUrl = up.url; fileName = up.name }
+      if (editLesson) {
+        await db.lessons.update({ ...editLesson, title, subject, content: content||undefined, youtubeUrl: ytUrl||undefined, fileUrl, fileName, assignedTo: assigned })
+      } else {
+        await db.lessons.add({ title, subject, content: content||undefined, youtubeUrl: ytUrl||undefined, fileUrl, fileName, assignedTo: assigned, isActive: true })
       }
-      await db.lessons.add({ title, subject, content: content || undefined, youtubeUrl: ytUrl || undefined, fileUrl, fileName, assignedTo: assigned, isActive: true })
-      setTitle(''); setContent(''); setYtUrl(''); setPdfFile(null); setAssigned([]); setShowForm(false); onReload()
+      cancel(); onReload()
     } finally { setSaving(false) }
   }
 
@@ -185,11 +276,12 @@ function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; studen
     <div className="tab-content">
       <div className="tab-header">
         <h2>Lecciones ({lessons.length})</h2>
-        <button className="btn-primary" onClick={() => setShowForm(v => !v)}><Plus size={14}/> Nueva lección</button>
+        <button className="btn-primary" onClick={openNew}><Plus size={14}/> Nueva lección</button>
       </div>
 
       {showForm && (
         <div className="form-card">
+          <h3>{editLesson ? 'Editar lección' : 'Nueva lección'}</h3>
           <div className="form-row">
             <div className="field full"><label>Título</label><input value={title} onChange={e => setTitle(e.target.value)}/></div>
           </div>
@@ -199,33 +291,36 @@ function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; studen
                 {SUBJECTS.map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
-            <div className="field full"><label>Video YouTube (opcional)</label><input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/..."/></div>
+            <div className="field full"><label>Video YouTube (opcional)</label>
+              <input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/..."/>
+            </div>
           </div>
           <div className="field full"><label>Contenido / Explicación</label>
             <textarea rows={4} value={content} onChange={e => setContent(e.target.value)} placeholder="Escribe aquí el contenido de la lección..."/>
           </div>
           <div className="field full">
-            <label>Adjuntar PDF (opcional)</label>
+            <label>Adjuntar archivo (PDF, Word, PPT)</label>
             <div className="file-upload-row">
               <label className="file-upload-btn">
-                📎 {pdfFile ? pdfFile.name : 'Seleccionar archivo'}
+                📎 {pdfFile ? pdfFile.name : (editLesson?.fileName ?? 'Seleccionar archivo')}
                 <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" style={{display:'none'}} onChange={e => setPdfFile(e.target.files?.[0] ?? null)}/>
               </label>
-              {pdfFile && <button className="btn-ghost" onClick={() => setPdfFile(null)}>✕ Quitar</button>}
+              {(pdfFile || editLesson?.fileUrl) && <button className="btn-ghost" onClick={() => setPdfFile(null)}>✕ Quitar</button>}
             </div>
           </div>
           <div className="field full"><label>Asignar a alumnos</label>
             <div className="chip-grid">
               {students.map(s => (
                 <label key={s.id} className={`chip ${assigned.includes(s.id)?'selected':''}`}>
-                  <input type="checkbox" checked={assigned.includes(s.id)} onChange={e => setAssigned(prev => e.target.checked ? [...prev,s.id] : prev.filter(x => x!==s.id))}/>
+                  <input type="checkbox" checked={assigned.includes(s.id)}
+                    onChange={e => setAssigned(prev => e.target.checked ? [...prev,s.id] : prev.filter(x=>x!==s.id))}/>
                   {s.firstName} {s.lastName}
                 </label>
               ))}
             </div>
           </div>
           <div className="form-actions">
-            <button className="btn-outline" onClick={() => setShowForm(false)}>Cancelar</button>
+            <button className="btn-outline" onClick={cancel}>Cancelar</button>
             <button className="btn-primary" onClick={save} disabled={saving}>{saving?'Guardando...':'Guardar'}</button>
           </div>
         </div>
@@ -241,8 +336,12 @@ function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; studen
               </div>
               <h3>{l.title}</h3>
               {l.youtubeUrl && <p className="lesson-yt">▶ Video adjunto</p>}
+              {l.fileUrl && <p className="lesson-yt">📄 {l.fileName ?? 'Archivo'}</p>}
               <p className="lesson-students">👥 {l.assignedTo.length} alumno{l.assignedTo.length!==1?'s':''}</p>
-              <button className="btn-danger-sm" onClick={async () => { await db.lessons.delete(l.id); onReload() }}>Eliminar</button>
+              <div style={{display:'flex',gap:'.4rem',marginTop:'auto',flexWrap:'wrap'}}>
+                <button className="btn-danger-sm" style={{borderColor:'#bfdbfe',background:'#eff6ff',color:'#1d4ed8'}} onClick={() => openEdit(l)}><Pencil size={11}/> Editar</button>
+                <button className="btn-danger-sm" onClick={async () => { await db.lessons.delete(l.id); onReload() }}>Eliminar</button>
+              </div>
             </div>
           ))
         }
@@ -253,25 +352,68 @@ function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; studen
 
 // ── PRACTICES TAB ────────────────────────────────────────────────────
 function PracticesTab({ practices, students, onReload }: { practices: Practice[]; students: Student[]; onReload: () => void }) {
-  const [showForm, setShowForm] = useState(false)
-  const [title, setTitle]       = useState('')
-  const [subject, setSubject]   = useState<Subject>('Matemáticas')
-  const [desc, setDesc]         = useState('')
-  const [questions, setQuestions] = useState<any[]>([])
-  const [assigned, setAssigned]   = useState<string[]>([])
-  const [dueDate, setDueDate]     = useState('')
-  const [saving, setSaving]       = useState(false)
+  const [showForm, setShowForm]         = useState(false)
+  const [editPractice, setEditPractice]   = useState<Practice|null>(null)
+  const [pdfModal, setPdfModal]           = useState<File|null>(null)
+  const [title, setTitle]           = useState('')
+  const [subject, setSubject]       = useState<Subject>('Matemáticas')
+  const [desc, setDesc]             = useState('')
+  const [questions, setQuestions]   = useState<any[]>([])
+  const [assigned, setAssigned]     = useState<string[]>([])
+  const [dueDate, setDueDate]       = useState('')
+  const [pdfFile, setPdfFile]         = useState<File|null>(null)
+  const [generating, setGenerating]   = useState(false)
+  const [genError, setGenError]       = useState('')
+  const [saving, setSaving]           = useState(false)
+
+  const openNew = () => {
+    setEditPractice(null); setTitle(''); setSubject('Matemáticas')
+    setDesc(''); setQuestions([]); setAssigned([]); setDueDate(''); setPdfFile(null); setGenError(''); setShowForm(true)
+  }
+  const openEdit = (p: Practice) => {
+    setEditPractice(p); setTitle(p.title); setSubject(p.subject)
+    setDesc(p.description); setQuestions(p.questions.map(q => ({...q}))); setAssigned(p.assignedTo)
+    setDueDate(p.dueDate ?? ''); setPdfFile(null); setGenError(''); setShowForm(true)
+  }
+  const cancel = () => { setShowForm(false); setEditPractice(null) }
+
+  const generateFromPdf = async () => {
+    if (!pdfFile) return
+    setGenerating(true); setGenError('')
+    try {
+      const base64 = await new Promise<string>((res, rej) => {
+        const reader = new FileReader()
+        reader.onload = () => res((reader.result as string).split(',')[1])
+        reader.onerror = rej
+        reader.readAsDataURL(pdfFile)
+      })
+      const resp = await fetch('/api/generate-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfBase64: base64, subject, numQuestions: 5 })
+      })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Error al generar')
+      setQuestions(data.questions)
+    } catch (e: any) {
+      setGenError(e.message)
+    } finally { setGenerating(false) }
+  }
 
   const addQ = () => setQuestions(prev => [...prev, { id: uid(), text: '', type: 'multiple', options: ['','','',''], correctOption: 0, points: 5 }])
   const updateQ = (id: string, patch: any) => setQuestions(prev => prev.map(q => q.id===id ? {...q,...patch} : q))
   const removeQ = (id: string) => setQuestions(prev => prev.filter(q => q.id!==id))
 
   const save = async () => {
-    if (!title.trim() || questions.length === 0 || assigned.length === 0) { alert('Completa título, preguntas y asignación'); return }
+    if (!title.trim() || questions.length === 0 || assigned.length === 0) { alert('Completá título, preguntas y asignación'); return }
     setSaving(true)
     try {
-      await db.practices.add({ title, subject, description: desc, questions, assignedTo: assigned, dueDate: dueDate || undefined, isActive: true, lessonId: undefined })
-      setTitle(''); setDesc(''); setQuestions([]); setAssigned([]); setDueDate(''); setShowForm(false); onReload()
+      if (editPractice) {
+        await db.practices.update({ ...editPractice, title, subject, description: desc, questions, assignedTo: assigned, dueDate: dueDate||undefined })
+      } else {
+        await db.practices.add({ title, subject, description: desc, questions, assignedTo: assigned, dueDate: dueDate||undefined, isActive: true, lessonId: undefined })
+      }
+      cancel(); onReload()
     } finally { setSaving(false) }
   }
 
@@ -279,11 +421,27 @@ function PracticesTab({ practices, students, onReload }: { practices: Practice[]
     <div className="tab-content">
       <div className="tab-header">
         <h2>Prácticas ({practices.length})</h2>
-        <button className="btn-primary" onClick={() => setShowForm(v => !v)}><Plus size={14}/> Nueva práctica</button>
+        <div style={{display:'flex',gap:'.5rem',flexWrap:'wrap'}}>
+          <label className="btn-primary" style={{cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+            📄 Desde PDF
+            <input type="file" accept=".pdf" style={{display:'none'}} onChange={e => { const f=e.target.files?.[0]; if(f) setPdfModal(f) }}/>
+          </label>
+          <button className="btn-outline" onClick={openNew}><Plus size={14}/> Manual</button>
+        </div>
       </div>
+
+      {pdfModal && (
+        <CreatePracticeModal
+          students={students}
+          initialFile={pdfModal}
+          onClose={() => setPdfModal(null)}
+          onSaved={() => { setPdfModal(null); onReload() }}
+        />
+      )}
 
       {showForm && (
         <div className="form-card">
+          <h3>{editPractice ? 'Editar práctica' : 'Nueva práctica'}</h3>
           <div className="form-row">
             <div className="field full"><label>Título</label><input value={title} onChange={e => setTitle(e.target.value)}/></div>
             <div className="field"><label>Materia</label>
@@ -295,11 +453,30 @@ function PracticesTab({ practices, students, onReload }: { practices: Practice[]
             <div className="field"><label>Fecha límite (opcional)</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}/></div>
           </div>
 
+          <div className="field full">
+            <label>Generar preguntas desde PDF con IA</label>
+            <div className="file-upload-row">
+              <label className="file-upload-btn">
+                📎 {pdfFile ? pdfFile.name : 'Seleccionar PDF'}
+                <input type="file" accept=".pdf" style={{display:'none'}} onChange={e => { setPdfFile(e.target.files?.[0] ?? null); setGenError('') }}/>
+              </label>
+              {pdfFile && <button className="btn-ghost" onClick={() => setPdfFile(null)}>✕ Quitar</button>}
+              {pdfFile && (
+                <button className="btn-primary sm" onClick={generateFromPdf} disabled={generating}>
+                  {generating ? '⏳ Generando...' : '✨ Generar preguntas con IA'}
+                </button>
+              )}
+            </div>
+            {genError && <p style={{color:'var(--coral)',fontSize:'.82rem',marginTop:'.35rem'}}>⚠ {genError}</p>}
+            {generating && <p style={{color:'var(--muted)',fontSize:'.82rem',marginTop:'.35rem'}}>Extrayendo texto y generando preguntas... puede tardar unos segundos.</p>}
+          </div>
+
           <div className="field full"><label>Asignar a alumnos</label>
             <div className="chip-grid">
               {students.map(s => (
                 <label key={s.id} className={`chip ${assigned.includes(s.id)?'selected':''}`}>
-                  <input type="checkbox" checked={assigned.includes(s.id)} onChange={e => setAssigned(prev => e.target.checked ? [...prev,s.id] : prev.filter(x => x!==s.id))}/>
+                  <input type="checkbox" checked={assigned.includes(s.id)}
+                    onChange={e => setAssigned(prev => e.target.checked ? [...prev,s.id] : prev.filter(x=>x!==s.id))}/>
                   {s.firstName} {s.lastName}
                 </label>
               ))}
@@ -337,7 +514,7 @@ function PracticesTab({ practices, students, onReload }: { practices: Practice[]
           </div>
 
           <div className="form-actions">
-            <button className="btn-outline" onClick={() => setShowForm(false)}>Cancelar</button>
+            <button className="btn-outline" onClick={cancel}>Cancelar</button>
             <button className="btn-primary" onClick={save} disabled={saving}>{saving?'Guardando...':'Guardar práctica'}</button>
           </div>
         </div>
@@ -354,7 +531,10 @@ function PracticesTab({ practices, students, onReload }: { practices: Practice[]
               <h3>{p.title}</h3>
               <p className="lesson-students">📋 {p.questions.length} preguntas · 👥 {p.assignedTo.length} alumnos</p>
               {p.dueDate && <p className="lesson-students">📅 Vence: {p.dueDate}</p>}
-              <button className="btn-danger-sm" onClick={async () => { await db.practices.delete(p.id); onReload() }}>Eliminar</button>
+              <div style={{display:'flex',gap:'.4rem',marginTop:'auto',flexWrap:'wrap'}}>
+                <button className="btn-danger-sm" style={{borderColor:'#bfdbfe',background:'#eff6ff',color:'#1d4ed8'}} onClick={() => openEdit(p)}><Pencil size={11}/> Editar</button>
+                <button className="btn-danger-sm" onClick={async () => { await db.practices.delete(p.id); onReload() }}>Eliminar</button>
+              </div>
             </div>
           ))
         }
@@ -372,7 +552,6 @@ function ReviewsTab({ subs, students, practices, onReload }: { subs: Submission[
 
   const pending  = subs.filter(s => !s.reviewed)
   const reviewed = subs.filter(s => s.reviewed)
-
   const getStudent  = (id: string) => students.find(s => s.id === id)
   const getPractice = (id: string) => practices.find(p => p.id === id)
 
@@ -388,7 +567,6 @@ function ReviewsTab({ subs, students, practices, onReload }: { subs: Submission[
     const student  = getStudent(sub.studentId)
     const practice = getPractice(sub.practiceId)
     const isOpen   = expanded === sub.id
-
     return (
       <div key={sub.id} className={`review-card ${!sub.reviewed?'pending':''}`}>
         <div className="review-header" onClick={() => setExpanded(isOpen?null:sub.id)}>
@@ -401,7 +579,6 @@ function ReviewsTab({ subs, students, practices, onReload }: { subs: Submission[
           {sub.reviewed && <span className="badge reviewed">Revisado · {sub.score} pts</span>}
           {isOpen ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
         </div>
-
         {isOpen && (
           <div className="review-body">
             <p className="review-date">Entregada: {new Date(sub.submittedAt).toLocaleString('es')}</p>
@@ -448,11 +625,11 @@ function ReviewsTab({ subs, students, practices, onReload }: { subs: Submission[
 
 // ── SETTINGS TAB ─────────────────────────────────────────────────────
 function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; onProfileUpdate: (p: TeacherProfile) => void }) {
-  const [logoText, setLogoText]       = useState(profile.logoText)
-  const [schoolName, setSchoolName]   = useState(profile.schoolName)
-  const [primary, setPrimary]         = useState(profile.primaryColor)
-  const [secondary, setSecondary]     = useState(profile.secondaryColor)
-  const [saving, setSaving]           = useState(false)
+  const [logoText, setLogoText]     = useState(profile.logoText)
+  const [schoolName, setSchoolName] = useState(profile.schoolName)
+  const [primary, setPrimary]       = useState(profile.primaryColor)
+  const [secondary, setSecondary]   = useState(profile.secondaryColor)
+  const [saving, setSaving]         = useState(false)
   const hasBranding = profile.addOns.includes('branding')
 
   const save = async () => {
@@ -463,6 +640,9 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
     } finally { setSaving(false) }
   }
 
+  const mailtoActivate = (addon: string, price: string) =>
+    `mailto:salgueragonzaleze4@gmail.com?subject=Activar%20add-on%3A%20${encodeURIComponent(addon)}&body=Hola%2C%20quiero%20activar%20el%20add-on%20${encodeURIComponent(addon)}%20(${encodeURIComponent(price)})%20para%20mi%20cuenta%20TeachNest.`
+
   return (
     <div className="tab-content">
       <div className="tab-header"><h2>Ajustes</h2></div>
@@ -472,20 +652,16 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
           <div className="field"><label>Nombre del portal</label><input value={logoText} onChange={e => setLogoText(e.target.value)}/></div>
           <div className="field"><label>Institución</label><input value={schoolName} onChange={e => setSchoolName(e.target.value)}/></div>
         </div>
-
-        <h3 style={{marginTop:24}}>Personalización de colores {!hasBranding && <span className="addon-lock">🔒 Add-on</span>}</h3>
-        {!hasBranding && <p className="hint">Activá el add-on de Branding ($5/mes) para personalizar los colores de tu portal.</p>}
-        <div className="form-row" style={{opacity: hasBranding?1:0.4, pointerEvents: hasBranding?'auto':'none'}}>
-          <div className="field">
-            <label>Color principal</label>
+        <h3 style={{marginTop:24}}>Colores {!hasBranding && <span className="addon-lock">🔒 Add-on</span>}</h3>
+        {!hasBranding && <p className="hint">Activá el add-on de Branding para personalizar los colores.</p>}
+        <div className="form-row" style={{opacity:hasBranding?1:.4,pointerEvents:hasBranding?'auto':'none'}}>
+          <div className="field"><label>Color principal</label>
             <div className="color-row"><input type="color" value={primary} onChange={e => setPrimary(e.target.value)}/><span>{primary}</span></div>
           </div>
-          <div className="field">
-            <label>Color secundario</label>
+          <div className="field"><label>Color secundario</label>
             <div className="color-row"><input type="color" value={secondary} onChange={e => setSecondary(e.target.value)}/><span>{secondary}</span></div>
           </div>
         </div>
-
         <div className="form-actions">
           <button className="btn-primary" onClick={save} disabled={saving}>{saving?'Guardando...':'Guardar cambios'}</button>
         </div>
@@ -497,20 +673,22 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
           <span className="plan-name">Plan Base</span>
           <span className="plan-limit">👥 {profile.studentsLimit} alumnos máx.</span>
         </div>
-        <h4 style={{marginTop:16}}>Add-ons activos</h4>
+        <h4 style={{marginTop:16,marginBottom:8}}>Add-ons activos</h4>
         {profile.addOns.length === 0
           ? <p className="hint">No tenés add-ons activados aún.</p>
           : profile.addOns.map(a => <span key={a} className="addon-chip active">{a}</span>)
         }
         <div className="addon-shop">
           {[
-            {id:'branding',     label:'🎨 Branding propio',    price:'$5/mes', desc:'Colores e identidad personalizados'},
-            {id:'extra_students',label:'👥 +10 alumnos',       price:'$3/mes', desc:'Amplía tu límite de alumnos'},
-            {id:'reports',      label:'📄 Reportes PDF',       price:'$4/mes', desc:'Exporta informes de progreso'},
+            {id:'branding',      label:'🎨 Branding propio',   price:'$5/mes', desc:'Colores e identidad personalizados'},
+            {id:'extra_students',label:'👥 +10 alumnos',        price:'$3/mes', desc:'Ampliá tu límite de alumnos'},
+            {id:'reports',       label:'📄 Reportes PDF',       price:'$4/mes', desc:'Exportá informes de progreso'},
           ].filter(a => !profile.addOns.includes(a.id)).map(a => (
             <div key={a.id} className="addon-row">
               <div><strong>{a.label}</strong><p>{a.desc}</p></div>
-              <button className="btn-outline sm">{a.price} — Activar</button>
+              <a href={mailtoActivate(a.label, a.price)} className="btn-outline sm" style={{textDecoration:'none',whiteSpace:'nowrap'}}>
+                {a.price} — Activar
+              </a>
             </div>
           ))}
         </div>
