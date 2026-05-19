@@ -1,0 +1,259 @@
+/* ── TeachNest Global Styles ──────────────────────────────────────── */
+:root {
+  --color-primary:       #e85d3f;
+  --color-secondary:     #0d9488;
+  --color-primary-light: #e85d3f22;
+  --bg:         #f5f0e8;
+  --white:      #ffffff;
+  --navy:       #1a1a2e;
+  --muted:      #6b7280;
+  --border:     #e5e7eb;
+  --light-bg:   #f9f5f0;
+  --success:    #16a34a;
+  --danger:     #dc2626;
+  --warn-bg:    #fff7ed;
+  --radius:     10px;
+  --shadow:     0 2px 12px rgba(0,0,0,.07);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+html { font-family: 'Inter', system-ui, sans-serif; font-size: 15px; color: var(--navy) }
+body { background: var(--bg); min-height: 100vh }
+input, select, textarea, button { font-family: inherit; font-size: inherit }
+button { cursor: pointer; border: none; background: none }
+
+/* ── Spinner ────────────────────────────────────────────────── */
+.app-loading { display:flex; align-items:center; justify-content:center; min-height:100vh }
+.spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--color-primary); border-radius:50%; animation:spin .7s linear infinite }
+@keyframes spin { to { transform:rotate(360deg) } }
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary { background:var(--color-primary); color:#fff; padding:8px 18px; border-radius:var(--radius); font-weight:600; transition:opacity .15s }
+.btn-primary:hover { opacity:.88 }
+.btn-primary.full { width:100%; padding:12px; font-size:15px; margin-top:8px }
+.btn-primary.lg { padding:13px 28px; font-size:16px }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed }
+.btn-outline { background:var(--white); color:var(--navy); padding:8px 16px; border:1.5px solid var(--border); border-radius:var(--radius); font-weight:500 }
+.btn-outline:hover { border-color:var(--navy) }
+.btn-outline.lg { padding:13px 28px; font-size:16px }
+.btn-outline.sm { padding:5px 12px; font-size:12px }
+.btn-ghost { background:none; color:var(--muted); padding:6px 10px; border-radius:6px }
+.btn-ghost:hover { background:var(--light-bg) }
+.btn-ghost.sm { padding:4px 8px; font-size:13px }
+.btn-danger-sm { background:none; color:var(--danger); font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid #fecaca }
+.btn-danger-sm:hover { background:#fef2f2 }
+.icon-btn { background:none; padding:5px; border-radius:6px; color:var(--muted) }
+.icon-btn:hover { background:var(--light-bg) }
+.icon-btn.danger { color:var(--danger) }
+.icon-btn.danger:hover { background:#fef2f2 }
+
+/* ── Brand logo ─────────────────────────────────────────────── */
+.brand-logo { font-size:20px; font-weight:800; color:var(--color-primary); letter-spacing:-.5px }
+.brand-logo.sm { font-size:16px }
+
+/* ── Badges / chips ─────────────────────────────────────────── */
+.badge { background:var(--color-primary); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px }
+.badge.reviewed { background:#dcfce7; color:#15803d }
+.subject-badge { background:var(--color-primary-light); color:var(--color-primary); font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px }
+.subject-badge.sm { font-size:10px; padding:2px 8px }
+.status-dot { width:8px; height:8px; border-radius:50%; background:var(--muted) }
+.status-dot.active { background:var(--success) }
+.addon-chip { background:var(--light-bg); color:var(--navy); font-size:12px; padding:4px 12px; border-radius:20px; border:1px solid var(--border); margin-right:6px; margin-bottom:6px; display:inline-block }
+.addon-chip.active { background:#dcfce7; border-color:#86efac; color:#15803d }
+.addon-lock { font-size:11px; color:var(--muted); font-weight:400; margin-left:8px }
+
+/* ── Forms ──────────────────────────────────────────────────── */
+.field { display:flex; flex-direction:column; gap:5px; flex:1 }
+.field.full { width:100% }
+.field label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.4px }
+input, select, textarea {
+  background:var(--light-bg); border:1.5px solid var(--border);
+  border-radius:8px; padding:9px 12px; color:var(--navy); width:100%
+}
+input:focus, select:focus, textarea:focus { outline:none; border-color:var(--color-secondary) }
+textarea { resize:vertical }
+.form-row { display:flex; gap:14px; flex-wrap:wrap }
+.form-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; box-shadow:var(--shadow) }
+.form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px }
+.hint { font-size:12px; color:var(--muted); margin-top:4px }
+.empty-msg { color:var(--muted); font-size:14px; padding:24px; text-align:center }
+
+/* ── Chip grid ──────────────────────────────────────────────── */
+.chip-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px }
+.chip { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; border:1.5px solid var(--border); font-size:13px; cursor:pointer; background:var(--white) }
+.chip input { display:none }
+.chip.selected { background:var(--color-primary-light); border-color:var(--color-primary); color:var(--color-primary); font-weight:600 }
+
+/* ── PIN row ────────────────────────────────────────────────── */
+.pin-row { display:flex; gap:6px }
+.pin-row input { flex:1 }
+.pin-display { font-size:13px; color:var(--muted) }
+
+/* ── Auth ───────────────────────────────────────────────────── */
+.auth-overlay { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg) }
+.auth-card { background:var(--white); border-radius:14px; padding:36px; width:100%; max-width:420px; box-shadow:0 4px 24px rgba(0,0,0,.1); display:flex; flex-direction:column; gap:10px }
+.auth-card h2 { font-size:22px; font-weight:700; margin-bottom:4px }
+.auth-card label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.4px }
+.auth-logo { font-size:24px; font-weight:800; color:var(--color-primary); margin-bottom:4px }
+.auth-back { align-self:flex-start; color:var(--muted); font-size:13px; padding:0; margin-bottom:4px }
+.auth-error { background:#fef2f2; color:var(--danger); font-size:13px; padding:10px 14px; border-radius:8px; border:1px solid #fecaca }
+.auth-switch { font-size:13px; color:var(--muted); text-align:center }
+.auth-switch button { color:var(--color-primary); font-weight:600 }
+
+/* ── Landing ────────────────────────────────────────────────── */
+.landing { min-height:100vh; background:var(--bg) }
+.landing-nav { display:flex; align-items:center; justify-content:space-between; padding:16px 60px; background:var(--white); border-bottom:1px solid var(--border) }
+.landing-nav-actions { display:flex; gap:12px; align-items:center }
+.hero { display:flex; align-items:center; justify-content:space-between; padding:80px 60px; gap:40px }
+.hero-content { max-width:540px }
+.hero-badge { display:inline-block; background:var(--color-primary); color:#fff; font-size:12px; font-weight:600; padding:6px 16px; border-radius:20px; margin-bottom:20px }
+.hero-content h1 { font-size:52px; font-weight:800; line-height:1.1; margin-bottom:18px }
+.hero-content h1 em { color:var(--color-primary); font-style:normal }
+.hero-sub { font-size:16px; color:var(--muted); line-height:1.6; margin-bottom:28px }
+.hero-ctas { display:flex; gap:14px; flex-wrap:wrap }
+.hero-visual { display:flex; flex-direction:column; gap:14px; align-items:flex-end }
+.hero-card { background:var(--white); border-radius:12px; padding:14px 20px; box-shadow:var(--shadow); display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; min-width:200px }
+.hero-card.secondary { background:var(--color-primary-light) }
+.hero-card.accent { background:#f0fdfa }
+.hero-card-icon { font-size:18px }
+.features { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:60px; background:var(--white) }
+.feature-card { background:var(--light-bg); border-radius:12px; padding:24px; border:1px solid var(--border) }
+.feature-icon { font-size:28px; display:block; margin-bottom:12px }
+.feature-card h3 { font-size:15px; font-weight:700; margin-bottom:6px }
+.feature-card p { font-size:13px; color:var(--muted); line-height:1.5 }
+.pricing { padding:60px; display:flex; flex-direction:column; align-items:center; gap:24px }
+.pricing h2 { font-size:28px; font-weight:800 }
+.pricing-card { background:var(--white); border-radius:14px; padding:32px; width:100%; max-width:420px; box-shadow:var(--shadow); border:2px solid var(--color-primary) }
+.pricing-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:20px }
+.pricing-name { font-size:18px; font-weight:700 }
+.pricing-price span:first-child { font-size:36px; font-weight:800; color:var(--color-primary) }
+.pricing-price span:last-child { font-size:14px; color:var(--muted) }
+.pricing-features { list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:20px }
+.pricing-features li { display:flex; align-items:center; gap:10px; font-size:14px }
+.pricing-features li span:first-child { color:var(--success); font-weight:700 }
+.pricing-addons { margin-bottom:20px }
+.pricing-addons p { font-size:12px; color:var(--muted); margin-bottom:8px; font-weight:600 }
+.landing-footer { text-align:center; padding:24px; font-size:13px; color:var(--muted); border-top:1px solid var(--border) }
+
+/* ── Portal shell (sidebar layout) ─────────────────────────── */
+.portal-shell { display:flex; min-height:100vh }
+.sidebar { width:220px; background:var(--navy); color:#fff; display:flex; flex-direction:column; padding:24px 0; flex-shrink:0 }
+.sidebar-logo { font-size:18px; font-weight:800; color:var(--color-primary); padding:0 20px 24px; border-bottom:1px solid rgba(255,255,255,.1) }
+.sidebar-nav { flex:1; padding:16px 0; display:flex; flex-direction:column; gap:2px }
+.sidebar-item { display:flex; align-items:center; gap:10px; padding:11px 20px; color:rgba(255,255,255,.7); font-size:14px; font-weight:500; border-radius:0; transition:all .15s; text-align:left }
+.sidebar-item:hover { background:rgba(255,255,255,.08); color:#fff }
+.sidebar-item.active { background:var(--color-primary); color:#fff }
+.sidebar-item .badge { margin-left:auto }
+.sidebar-signout { display:flex; align-items:center; gap:8px; padding:11px 20px; color:rgba(255,255,255,.5); font-size:13px; margin-top:auto }
+.sidebar-signout:hover { color:#fff }
+.portal-main { flex:1; overflow-y:auto; padding:32px; background:var(--bg) }
+.portal-loading { display:flex; align-items:center; justify-content:center; height:60vh }
+
+/* ── Tab content ────────────────────────────────────────────── */
+.tab-content { max-width:900px; margin:0 auto }
+.tab-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px }
+.tab-header h2 { font-size:24px; font-weight:800 }
+
+/* ── List rows ──────────────────────────────────────────────── */
+.list { display:flex; flex-direction:column; gap:8px }
+.list-row { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; display:flex; align-items:center; gap:14px }
+.avatar { width:38px; height:38px; border-radius:50%; background:var(--color-secondary); color:#fff; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
+.avatar.sm { width:30px; height:30px; font-size:11px }
+.list-info { flex:1 }
+.list-info strong { display:block; font-size:14px; font-weight:600 }
+.list-info span { font-size:12px; color:var(--muted) }
+.limit-warning { background:var(--warn-bg); border:1px solid #fde68a; color:#92400e; font-size:13px; padding:10px 16px; border-radius:8px; margin-bottom:16px }
+
+/* ── Cards grid ─────────────────────────────────────────────── */
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px }
+.lesson-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow) }
+.lesson-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
+.lesson-card h3 { font-size:14px; font-weight:700; margin-bottom:6px; line-height:1.3 }
+.lesson-yt, .lesson-students { font-size:12px; color:var(--muted); margin-bottom:4px }
+
+/* ── Questions builder ──────────────────────────────────────── */
+.questions-section { margin-top:16px }
+.qs-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px }
+.qs-header h4 { font-size:14px; font-weight:700 }
+.q-card { background:var(--light-bg); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:10px }
+.q-card-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap }
+.q-card-header select { flex:1; min-width:140px }
+.options-builder { display:flex; flex-direction:column; gap:6px; margin-top:8px }
+.opt-row { display:flex; align-items:center; gap:8px }
+.opt-row input[type=text] { flex:1 }
+.opt-letter { font-weight:700; color:var(--color-secondary); width:18px; text-align:center }
+
+/* ── Reviews ────────────────────────────────────────────────── */
+.review-section-title { font-size:15px; font-weight:700; color:var(--muted); margin-bottom:12px; margin-top:8px }
+.review-card { background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden }
+.review-card.pending { border-left:4px solid #fbbf24 }
+.review-header { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer }
+.review-header:hover { background:var(--light-bg) }
+.review-info { flex:1 }
+.review-info strong { display:block; font-size:14px }
+.review-info span { font-size:12px; color:var(--muted) }
+.review-body { padding:16px 18px; border-top:1px solid var(--border) }
+.review-date { font-size:12px; color:var(--muted); margin-bottom:14px }
+.review-q { background:var(--light-bg); border-radius:8px; padding:12px; margin-bottom:8px }
+.review-q-header { display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:8px }
+.review-ans { font-size:13px; padding:8px 12px; border-radius:6px; background:var(--white); border:1px solid var(--border) }
+.review-ans.correct { background:#dcfce7; border-color:#86efac; color:#15803d }
+.review-ans.wrong { background:#fef2f2; border-color:#fecaca; color:var(--danger) }
+.review-grade { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; align-items:flex-end }
+
+/* ── Settings ───────────────────────────────────────────────── */
+.color-row { display:flex; align-items:center; gap:10px }
+.color-row input[type=color] { width:44px; height:36px; padding:2px; border-radius:6px; border:1px solid var(--border); cursor:pointer }
+.plan-display { display:flex; align-items:center; gap:16px; background:var(--color-primary-light); border-radius:8px; padding:14px 18px }
+.plan-name { font-weight:700; font-size:15px }
+.plan-limit { font-size:13px; color:var(--muted) }
+.addon-shop { display:flex; flex-direction:column; gap:10px; margin-top:12px }
+.addon-row { display:flex; align-items:center; justify-content:space-between; background:var(--light-bg); border-radius:8px; padding:12px 16px; border:1px solid var(--border) }
+.addon-row strong { font-size:13px }
+.addon-row p { font-size:12px; color:var(--muted) }
+
+/* ── Student portal ─────────────────────────────────────────── */
+.sp-shell { min-height:100vh; background:var(--bg) }
+.sp-header { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; background:var(--white); border-bottom:1px solid var(--border) }
+.sp-student-name { font-size:14px; color:var(--muted) }
+.sp-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); background:var(--white) }
+.sp-tabs button { padding:12px 24px; font-size:14px; font-weight:500; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px }
+.sp-tabs button.active { color:var(--color-primary); border-bottom-color:var(--color-primary); font-weight:700 }
+.sp-list { max-width:700px; margin:24px auto; padding:0 16px; display:flex; flex-direction:column; gap:12px }
+.sp-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px }
+.sp-card-info h3 { font-size:15px; font-weight:700; margin-bottom:4px }
+.sp-due { font-size:12px; color:#f97316; margin-top:4px }
+.sp-submitted { color:var(--success); font-size:13px; font-weight:600 }
+.sp-practice { min-height:100vh; background:var(--bg) }
+.sp-nav { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; background:var(--white); border-bottom:1px solid var(--border) }
+.sp-content { max-width:680px; margin:0 auto; padding:24px 16px }
+.sp-content h1 { font-size:22px; font-weight:800; margin-bottom:6px }
+.sp-desc { color:var(--muted); font-size:14px; margin-bottom:20px }
+.sp-question { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:14px }
+.sp-q-header { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:10px }
+.sp-q-text { font-size:15px; font-weight:600; margin-bottom:14px }
+.sp-options { display:flex; flex-direction:column; gap:8px }
+.sp-option { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:8px; border:1.5px solid var(--border); cursor:pointer; font-size:14px }
+.sp-option input { display:none }
+.sp-option.selected { background:var(--color-primary-light); border-color:var(--color-primary) }
+.sp-textarea { width:100%; border:1.5px solid var(--border); border-radius:8px; padding:12px; font-size:14px; background:var(--light-bg) }
+.sp-textarea:focus { outline:none; border-color:var(--color-secondary) }
+.sp-done { text-align:center; padding:40px; font-size:20px; font-weight:700; color:var(--success) }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .portal-shell { flex-direction:column }
+  .sidebar { width:100%; flex-direction:row; padding:8px 0; overflow-x:auto }
+  .sidebar-logo { display:none }
+  .sidebar-nav { flex-direction:row; padding:0; gap:0; flex:1 }
+  .sidebar-item { padding:10px 14px; font-size:12px; flex-direction:column; gap:2px }
+  .sidebar-item svg { width:16px; height:16px }
+  .sidebar-signout { display:none }
+  .portal-main { padding:16px }
+  .hero { flex-direction:column; padding:40px 20px }
+  .hero-content h1 { font-size:34px }
+  .hero-visual { display:none }
+  .features { grid-template-columns:1fr; padding:30px 20px }
+  .landing-nav { padding:12px 20px }
+  .cards-grid { grid-template-columns:1fr }
+}
