@@ -21,25 +21,30 @@ export default function App() {
   }
 
   useEffect(() => {
-    auth.getSession().then(async s => {
-      if (s) {
-        const p = await auth.getProfile()
-        setProfile(p)
-        if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
-        setView(resolveView(p))
-      }
-      setLoading(false)
-    })
+    auth.getSession()
+      .then(async s => {
+        if (s) {
+          const p = await auth.getProfile()
+          setProfile(p)
+          if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
+          setView(resolveView(p))
+        }
+      })
+      .catch(() => {/* silencioso — queda en landing */})
+      .finally(() => setLoading(false))
+
     return auth.onAuthChange(async s => {
-      if (s) {
-        const p = await auth.getProfile()
-        setProfile(p)
-        if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
-        setView(resolveView(p))
-      } else {
-        setProfile(null)
-        setView('landing')
-      }
+      try {
+        if (s) {
+          const p = await auth.getProfile()
+          setProfile(p)
+          if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
+          setView(resolveView(p))
+        } else {
+          setProfile(null)
+          setView('landing')
+        }
+      } catch {/* silencioso */}
     })
   }, [])
 

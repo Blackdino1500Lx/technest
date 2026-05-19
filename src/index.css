@@ -1833,3 +1833,12 @@ html, body { overflow-x: hidden; width: 100%; }
   .tab-header h2 { font-size: 1.3rem; }
   .cards-grid { grid-template-columns: 1fr; }
 }
+
+/* ─── APP LOADING ───────────────────────────────────────────────── */
+.app-loading {
+  min-height: 100vh;
+  background: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
