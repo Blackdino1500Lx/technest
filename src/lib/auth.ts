@@ -15,16 +15,20 @@ export const auth = {
   async signUp(email: string, password: string, fullName: string, schoolName: string) {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
-    const uid = data.user!.id
-    await supabase.from('teachers').insert({
+    if (!data.user) throw new Error('Revisá tu correo y confirmá tu cuenta para continuar.')
+    const uid = data.user.id
+    const { error: dbError } = await supabase.from('teachers').insert({
       id: uid, email, full_name: fullName, school_name: schoolName,
     })
+    if (dbError && dbError.code !== '23505') throw new Error('Error al crear el perfil: ' + dbError.message)
     return uid
   },
 
   async signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    if (error) throw new Error(
+      error.message.includes('Invalid login') ? 'Correo o contraseña incorrectos.' : error.message
+    )
     return data.session
   },
 
