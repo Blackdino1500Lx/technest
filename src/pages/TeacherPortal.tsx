@@ -165,13 +165,19 @@ function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; studen
   const [content, setContent]   = useState('')
   const [ytUrl, setYtUrl]       = useState('')
   const [assigned, setAssigned] = useState<string[]>([])
+  const [pdfFile, setPdfFile]   = useState<File|null>(null)
   const [saving, setSaving]     = useState(false)
 
   const save = async () => {
     if (!title.trim()) return; setSaving(true)
     try {
-      await db.lessons.add({ title, subject, content: content || undefined, youtubeUrl: ytUrl || undefined, assignedTo: assigned, isActive: true })
-      setTitle(''); setContent(''); setYtUrl(''); setAssigned([]); setShowForm(false); onReload()
+      let fileUrl: string | undefined; let fileName: string | undefined
+      if (pdfFile) {
+        const uploaded = await db.storage.uploadFile(pdfFile)
+        fileUrl = uploaded.url; fileName = uploaded.name
+      }
+      await db.lessons.add({ title, subject, content: content || undefined, youtubeUrl: ytUrl || undefined, fileUrl, fileName, assignedTo: assigned, isActive: true })
+      setTitle(''); setContent(''); setYtUrl(''); setPdfFile(null); setAssigned([]); setShowForm(false); onReload()
     } finally { setSaving(false) }
   }
 
@@ -197,6 +203,16 @@ function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; studen
           </div>
           <div className="field full"><label>Contenido / Explicación</label>
             <textarea rows={4} value={content} onChange={e => setContent(e.target.value)} placeholder="Escribe aquí el contenido de la lección..."/>
+          </div>
+          <div className="field full">
+            <label>Adjuntar PDF (opcional)</label>
+            <div className="file-upload-row">
+              <label className="file-upload-btn">
+                📎 {pdfFile ? pdfFile.name : 'Seleccionar archivo'}
+                <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" style={{display:'none'}} onChange={e => setPdfFile(e.target.files?.[0] ?? null)}/>
+              </label>
+              {pdfFile && <button className="btn-ghost" onClick={() => setPdfFile(null)}>✕ Quitar</button>}
+            </div>
           </div>
           <div className="field full"><label>Asignar a alumnos</label>
             <div className="chip-grid">

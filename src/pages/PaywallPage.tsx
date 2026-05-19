@@ -34,7 +34,7 @@ export default function PaywallPage({ onSignOut }: Props) {
 
         <button
           className="paywall-cta"
-          onClick={() => window.open('mailto:salgueragonzaleze4@gmail.com?subject=Activar%20TeachNest&body=Hola%2C%20quiero%20activar%20mi%20cuenta%20TeachNest.', '_blank')}
+          onClick={() => window.open('mailto:edevcr25@gmail.com?subject=Activar%20TeachNest&body=Hola%2C%20quiero%20activar%20mi%20cuenta%20TeachNest.', '_blank')}
         >
           Contactar para activar →
         </button>
