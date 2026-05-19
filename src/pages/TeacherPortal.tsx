@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { db } from '../lib/db'
 import { auth } from '../lib/auth'
 import type { TeacherProfile, Student, Lesson, Practice, Submission, Grade, Level, Subject } from '../lib/types'
@@ -100,7 +100,7 @@ function StudentsTab({ students, onReload, profile }: { students: Student[]; onR
       if (editId) {
         await db.students.update({ id: editId, firstName: fn, lastName: ln, grade, level, pin })
       } else {
-        await db.students.add({ firstName: fn, lastName: ln, grade, level, pin, teacherId: '' })
+        await db.students.add({ firstName: fn, lastName: ln, grade, level, pin })
       }
       cancel(); onReload()
     } finally { setSaving(false) }

@@ -26,6 +26,10 @@ export const db = {
         .select().single()
       if (error) throw error; return toStudent(data)
     },
+    async update(s: Pick<Student,'id'|'firstName'|'lastName'|'grade'|'level'|'pin'>): Promise<void> {
+      const { error } = await supabase.from('students').update({ first_name: s.firstName, last_name: s.lastName, grade: s.grade, level: s.level, pin: s.pin }).eq('id', s.id)
+      if (error) throw error
+    },
     async delete(id: string) { const { error } = await supabase.from('students').delete().eq('id', id); if (error) throw error },
     async findByPin(pin: string, teacherId: string): Promise<Student | null> {
       const { data, error } = await supabase.from('students').select('*').eq('pin', pin).eq('teacher_id', teacherId).maybeSingle()
@@ -72,6 +76,10 @@ export const db = {
         .insert({ teacher_id: t, title: p.title, subject: p.subject, description: p.description, questions: p.questions, assigned_to: p.assignedTo, due_date: p.dueDate || null, is_active: p.isActive, lesson_id: p.lessonId || null })
         .select().single()
       if (error) throw error; return toPractice(data)
+    },
+    async update(p: Practice): Promise<void> {
+      const { error } = await supabase.from('practices').update({ title: p.title, subject: p.subject, description: p.description, questions: p.questions, assigned_to: p.assignedTo, due_date: p.dueDate || null, is_active: p.isActive }).eq('id', p.id)
+      if (error) throw error
     },
     async delete(id: string) { const { error } = await supabase.from('practices').delete().eq('id', id); if (error) throw error },
     async forStudent(studentId: string, teacherId: string): Promise<Practice[]> {
