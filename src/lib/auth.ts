@@ -3,7 +3,7 @@ import type { TeacherProfile } from './types'
 
 const toProfile = (r: any): TeacherProfile => ({
   id: r.id, email: r.email, fullName: r.full_name, schoolName: r.school_name ?? '',
-  plan: r.plan ?? 'basic', addOns: r.add_ons ?? [],
+  plan: r.plan ?? 'free', addOns: r.add_ons ?? [],
   primaryColor: r.primary_color ?? '#e85d3f',
   secondaryColor: r.secondary_color ?? '#0d9488',
   logoText: r.logo_text ?? 'TeachNest',
@@ -42,7 +42,7 @@ export const auth = {
   async getProfile(): Promise<TeacherProfile | null> {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return null
-    const { data, error } = await supabase.from('teachers').select('*').eq('id', session.user.id).single()
+    const { data, error } = await supabase.from('teachers').select('*').eq('id', session.user.id).maybeSingle()
     if (error || !data) return null
     return toProfile(data)
   },

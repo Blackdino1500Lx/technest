@@ -1,7 +1,7 @@
 export type Subject = 'Matemáticas' | 'Español' | 'Ciencias' | 'Estudios Sociales' | 'Inglés'
 export type Grade   = '7° Grado' | '8° Grado' | '9° Grado' | '10° Grado' | '11° Grado' | 'Universitario' | 'Adulto'
 export type Level   = 'Básico' | 'Intermedio' | 'Avanzado'
-export type Plan    = 'basic'
+export type Plan    = 'free' | 'basic'
 
 export interface TeacherProfile {
   id: string

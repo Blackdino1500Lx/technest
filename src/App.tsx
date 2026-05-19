@@ -4,23 +4,29 @@ import { applyTheme } from './lib/theme'
 import type { TeacherProfile } from './lib/types'
 import LandingPage   from './pages/LandingPage'
 import AuthPage      from './pages/AuthPage'
+import PaywallPage   from './pages/PaywallPage'
 import TeacherPortal from './pages/TeacherPortal'
 import StudentLogin  from './pages/StudentLogin'
 
-type View = 'landing' | 'auth' | 'portal' | 'student'
+type View = 'landing' | 'auth' | 'paywall' | 'portal' | 'student'
 
 export default function App() {
   const [view,    setView]    = useState<View>('landing')
   const [profile, setProfile] = useState<TeacherProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const resolveView = (p: TeacherProfile | null) => {
+    if (!p) return 'landing'
+    return p.plan === 'free' ? 'paywall' : 'portal'
+  }
+
   useEffect(() => {
     auth.getSession().then(async s => {
       if (s) {
         const p = await auth.getProfile()
         setProfile(p)
-        applyTheme(p?.primaryColor ?? '#e85d3f', p?.secondaryColor ?? '#0d9488', p?.addOns.includes('branding') ?? false)
-        setView('portal')
+        if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
+        setView(resolveView(p))
       }
       setLoading(false)
     })
@@ -28,8 +34,8 @@ export default function App() {
       if (s) {
         const p = await auth.getProfile()
         setProfile(p)
-        applyTheme(p?.primaryColor ?? '#e85d3f', p?.secondaryColor ?? '#0d9488', p?.addOns.includes('branding') ?? false)
-        setView('portal')
+        if (p) applyTheme(p.primaryColor, p.secondaryColor, p.addOns.includes('branding'))
+        setView(resolveView(p))
       } else {
         setProfile(null)
         setView('landing')
@@ -39,8 +45,9 @@ export default function App() {
 
   if (loading) return <div className="app-loading"><div className="spinner"/></div>
 
-  if (view === 'student') return <StudentLogin onBack={() => setView('landing')}/>
-  if (view === 'auth')    return <AuthPage onBack={() => setView('landing')} onSuccess={() => {}}/>
+  if (view === 'student')  return <StudentLogin onBack={() => setView('landing')}/>
+  if (view === 'auth')     return <AuthPage onBack={() => setView('landing')} onSuccess={() => {}}/>
+  if (view === 'paywall')  return <PaywallPage onSignOut={() => setView('landing')}/>
   if (view === 'portal' && profile) return (
     <TeacherPortal
       profile={profile}
