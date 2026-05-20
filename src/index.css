@@ -2186,6 +2186,20 @@ html, body { overflow-x: hidden; width: 100%; }
 .admin-saving { color: #6B7280; font-size: .72rem; font-style: italic; }
 .admin-saved  { color: #16a34a; font-size: .72rem; font-weight: 600; }
 .admin-error  { color: var(--coral, #E8533A); font-size: .72rem; }
+
+.admin-alert { background: #fef3c7; border: 1px solid #fcd34d; border-radius: .75rem; padding: .75rem 1rem; margin-bottom: 1.5rem; font-size: .85rem; color: #92400e; }
+
+.admin-access-btn { padding: .3rem .75rem; font-size: .78rem; border-radius: 99px; border: 1.5px solid; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.access-open  { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+.access-open:hover  { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.access-closed { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.access-closed:hover { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
+.admin-renewal { display: flex; flex-direction: column; gap: .15rem; }
+.renewal-date  { font-size: .8rem; font-weight: 600; color: var(--ink, #1A1A2E); }
+.renewal-ok    { font-size: .72rem; color: #16a34a; }
+.renewal-grace { font-size: .72rem; color: #d97706; font-weight: 600; }
+.renewal-overdue { font-size: .75rem; color: var(--coral, #E8533A); font-weight: 700; }
 @media (max-width: 640px) {
   .admin-header { padding: .75rem 1rem; }
   .admin-body   { padding: 1rem; }
