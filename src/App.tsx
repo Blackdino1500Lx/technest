@@ -7,8 +7,11 @@ import AuthPage      from './pages/AuthPage'
 import PaywallPage   from './pages/PaywallPage'
 import TeacherPortal from './pages/TeacherPortal'
 import StudentLogin  from './pages/StudentLogin'
+import AdminPanel    from './pages/AdminPanel'
 
 type View = 'landing' | 'auth' | 'paywall' | 'portal' | 'student'
+
+const IS_ADMIN = window.location.pathname === '/admin'
 
 const withTimeout = <T,>(promise: Promise<T>, ms = 5000): Promise<T> =>
   Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
@@ -22,6 +25,8 @@ export default function App() {
     !p ? 'landing' : p.plan === 'free' ? 'paywall' : 'portal'
 
   useEffect(() => {
+    if (IS_ADMIN) { setLoading(false); return }
+
     withTimeout(auth.getSession())
       .then(async s => {
         if (s) {
@@ -48,6 +53,8 @@ export default function App() {
       } catch { setLoading(false) }
     })
   }, [])
+
+  if (IS_ADMIN) return <AdminPanel/>
 
   if (loading) return <div className="app-loading"><div className="spinner"/></div>
 
