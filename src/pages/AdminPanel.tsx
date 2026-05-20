@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const ADMIN_EMAIL = 'salgueragonzaleze4@gmail.com'
+const ADMIN_EMAIL = 'edevcr25@gmail.com'
 
 const ADDONS = [
   { id: 'branding',       label: '🎨 Branding' },
