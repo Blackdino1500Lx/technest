@@ -1369,6 +1369,8 @@ html, body { overflow-x: hidden; width: 100%; }
   padding: .1rem .45rem;
   border-radius: 99px;
 }
+.sidebar-topbar { display: none; }  /* visible only on mobile via @media */
+
 .sidebar-signout {
   display: flex;
   align-items: center;
@@ -1817,19 +1819,64 @@ html, body { overflow-x: hidden; width: 100%; }
 
 /* Responsive portal */
 @media (max-width: 768px) {
+  /* Portal shell: stacks vertically */
   .portal-shell { flex-direction: column; }
+
+  /* Sidebar becomes a sticky top header */
   .sidebar {
     width: 100%; min-height: auto;
-    flex-direction: row; flex-wrap: wrap;
-    padding: .75rem 1rem;
-    position: static;
-    gap: .25rem;
+    flex-direction: column;
+    padding: 0;
+    position: sticky; top: 0; z-index: 100;
+    gap: 0;
   }
-  .sidebar-logo { padding: 0 .5rem 0 0; flex: 100%; font-size: 1.1rem; margin-bottom: .25rem; }
-  .sidebar-nav { flex-direction: row; flex-wrap: wrap; }
-  .sidebar-item { padding: .45rem .65rem; font-size: .8rem; }
-  .sidebar-signout { padding: .45rem .65rem; font-size: .8rem; }
-  .portal-main { padding: 1.25rem 1rem; }
+
+  /* Row 1: logo + salir */
+  .sidebar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem 1rem;
+    background: var(--teal);
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-logo { font-size: 1rem; padding: 0; }
+
+  /* Row 2: tab icons */
+  .sidebar-nav {
+    flex-direction: row;
+    background: var(--teal);
+    padding: 0 .5rem;
+    gap: 0;
+    justify-content: space-around;
+  }
+  .sidebar-item {
+    flex: 1;
+    flex-direction: column;
+    padding: .5rem .25rem .4rem;
+    gap: .2rem;
+    border-radius: 0;
+    font-size: .6rem;
+    border-bottom: 2px solid transparent;
+    justify-content: center;
+    align-items: center;
+  }
+  .sidebar-item.active {
+    background: transparent;
+    border-bottom: 2px solid white;
+  }
+  .sidebar-item svg { width: 20px; height: 20px; }
+  .sidebar-label { font-size: .6rem; line-height: 1; }
+  .sidebar-signout {
+    padding: .35rem .75rem;
+    font-size: .8rem;
+    gap: .3rem;
+    background: rgba(255,255,255,.1);
+    border-radius: .4rem;
+    align-items: center;
+  }
+
+  .portal-main { padding: 1rem; }
   .tab-header h2 { font-size: 1.3rem; }
   .cards-grid { grid-template-columns: 1fr; }
 }

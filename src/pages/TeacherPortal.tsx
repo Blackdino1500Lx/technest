@@ -43,23 +43,25 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
   return (
     <div className="portal-shell">
       <aside className="sidebar">
-        <div className="sidebar-logo">{profile.logoText}</div>
+        <div className="sidebar-topbar">
+          <div className="sidebar-logo">{profile.logoText}</div>
+          <button className="sidebar-signout" onClick={onSignOut}><LogOut size={16}/> <span>Salir</span></button>
+        </div>
         <nav className="sidebar-nav">
           {([
-            ['students',  'Alumnos',    <Users size={18}/>],
-            ['library',   'Biblioteca', <Library size={18}/>],
-            ['lessons',   'Lecciones',  <BookOpen size={18}/>],
-            ['practices', 'Prácticas',  <FileText size={18}/>],
-            ['reviews',   'Revisiones', <ClipboardList size={18}/>],
-            ['settings',  'Ajustes',    <Settings size={18}/>],
+            ['students',  'Alumnos',    <Users size={20}/>],
+            ['library',   'Biblioteca', <Library size={20}/>],
+            ['lessons',   'Lecciones',  <BookOpen size={20}/>],
+            ['practices', 'Prácticas',  <FileText size={20}/>],
+            ['reviews',   'Revisiones', <ClipboardList size={20}/>],
+            ['settings',  'Ajustes',    <Settings size={20}/>],
           ] as [Tab, string, React.ReactNode][]).map(([t, label, icon]) => (
             <button key={t} className={`sidebar-item ${tab===t?'active':''}`} onClick={() => setTab(t)}>
-              {icon} {label}
+              {icon} <span className="sidebar-label">{label}</span>
               {t === 'reviews' && pendingCount > 0 && <span className="badge">{pendingCount}</span>}
             </button>
           ))}
         </nav>
-        <button className="sidebar-signout" onClick={onSignOut}><LogOut size={16}/> Salir</button>
       </aside>
 
       <main className="portal-main">
