@@ -45,7 +45,6 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
       <aside className="sidebar">
         <div className="sidebar-topbar">
           <div className="sidebar-logo">{profile.logoText}</div>
-          <button className="sidebar-signout" onClick={onSignOut}><LogOut size={16}/> <span>Salir</span></button>
         </div>
         <nav className="sidebar-nav">
           {([
@@ -62,6 +61,7 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
             </button>
           ))}
         </nav>
+        <button className="sidebar-signout" onClick={onSignOut}><LogOut size={16}/> <span>Salir</span></button>
       </aside>
 
       <main className="portal-main">
