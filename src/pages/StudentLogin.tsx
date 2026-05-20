@@ -56,7 +56,8 @@ export default function StudentLogin({ onBack }: Props) {
         <div className="auth-logo">TeachNest</div>
         <h2>Acceso de alumno</h2>
         <label>Código de aula</label>
-        <input value={teacherCode} onChange={e => setTeacherCode(e.target.value)} placeholder="Nombre de tu institución"/>
+        <input value={teacherCode} onChange={e => setTeacherCode(e.target.value)} placeholder="Ej: Academia XYZ"/>
+        <p style={{fontSize:'.75rem',color:'var(--muted)',margin:'-.25rem 0 .25rem'}}>Preguntale a tu docente el nombre del aula</p>
         <label>Tu PIN</label>
         <input type="password" maxLength={6} value={pin} onChange={e => setPin(e.target.value)} placeholder="••••"/>
         {error && <div className="auth-error">{error}</div>}
