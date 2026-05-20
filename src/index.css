@@ -1369,7 +1369,7 @@ html, body { overflow-x: hidden; width: 100%; }
   padding: .1rem .45rem;
   border-radius: 99px;
 }
-.sidebar-topbar { display: none; }  /* visible only on mobile via @media */
+.sidebar-topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08); }
 
 .sidebar-signout {
   display: flex;
