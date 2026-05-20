@@ -1914,3 +1914,192 @@ html, body { overflow-x: hidden; width: 100%; }
   font-size: .85rem; color: var(--ink);
 }
 .create-practice-meta { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.25rem; }
+
+/* ─── STUDENT PORTAL ─────────────────────────────────────────────── */
+.sp-shell { min-height: 100vh; background: var(--cream); display: flex; flex-direction: column; }
+
+.sp-header {
+  background: var(--teal);
+  padding: .85rem 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.brand-logo { font-family: var(--font-serif); font-weight: 700; color: #fff; font-size: 1.2rem; }
+.brand-logo.sm { font-size: 1rem; }
+.sp-student-name { flex: 1; color: rgba(255,255,255,.85); font-family: var(--font-sans); font-size: .9rem; font-weight: 500; }
+.btn-ghost.sm { padding: .3rem .75rem; font-size: .78rem; }
+
+.sp-tabs {
+  display: flex;
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+}
+.sp-tabs button {
+  background: none; border: none;
+  padding: .85rem 1.25rem;
+  font-family: var(--font-sans); font-size: .88rem; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.sp-tabs button.active { color: var(--coral); border-bottom-color: var(--coral); font-weight: 600; }
+.sp-tabs button:hover:not(.active) { color: var(--ink); }
+
+.sp-list { padding: 1.5rem; max-width: 760px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: .75rem; }
+
+.sp-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  transition: box-shadow .15s;
+}
+.sp-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+.sp-card-info { display: flex; flex-direction: column; gap: .3rem; flex: 1; }
+.sp-card-info h3 { font-family: var(--font-serif); font-size: 1.05rem; color: var(--ink); margin: 0; }
+.subject-badge.sm { font-size: .65rem; }
+.sp-due { font-size: .75rem; color: var(--muted); }
+.sp-submitted { font-size: .82rem; font-weight: 600; color: #16a34a; background: #f0fdf4; padding: .3rem .75rem; border-radius: 99px; white-space: nowrap; }
+
+/* Practice view */
+.sp-practice { min-height: 100vh; background: var(--cream); }
+.sp-nav {
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--border);
+  padding: .85rem 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.sp-content { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
+.sp-content h1 { font-family: var(--font-serif); font-size: 1.75rem; color: var(--ink); margin: 0 0 .5rem; }
+.sp-desc { color: var(--muted); font-size: .92rem; margin: 0 0 2rem; }
+
+.sp-question {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.sp-q-header { display: flex; justify-content: space-between; font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; }
+.sp-q-text { font-size: .95rem; color: var(--ink); margin: 0 0 1rem; line-height: 1.55; }
+
+.sp-options { display: flex; flex-direction: column; gap: .5rem; }
+.sp-option {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .7rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: .75rem;
+  cursor: pointer;
+  font-size: .9rem;
+  color: var(--ink);
+  transition: all .15s;
+}
+.sp-option input[type=radio] { display: none; }
+.sp-option:hover { border-color: var(--coral); background: #fff8f6; }
+.sp-option.selected { border-color: var(--coral); background: #fff0ee; color: var(--coral); font-weight: 600; }
+
+.sp-textarea {
+  width: 100%; padding: .75rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: .75rem;
+  font-family: var(--font-sans); font-size: .9rem;
+  resize: vertical; outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+}
+.sp-textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(232,83,58,.1); }
+
+.sp-done {
+  text-align: center; padding: 3rem;
+  font-family: var(--font-serif); font-size: 1.5rem;
+  color: #16a34a; background: #f0fdf4;
+  border-radius: 1rem; border: 1px solid #bbf7d0;
+}
+
+@media (max-width: 600px) {
+  .sp-card { flex-direction: column; align-items: flex-start; }
+  .sp-content { padding: 1.25rem 1rem; }
+}
+
+/* ─── RESPONSIVE COMPLETO TEACHNEST ─────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Auth */
+  .auth-card { padding: 2rem 1.25rem; margin: 1rem; }
+  .auth-card h2 { font-size: 1.5rem; }
+
+  /* Paywall */
+  .paywall-card { padding: 2rem 1.25rem; }
+  .paywall-card h2 { font-size: 1.6rem; }
+  .paywall-price .amount { font-size: 2.4rem; }
+
+  /* Teacher portal */
+  .portal-main { padding: 1rem; }
+  .tab-header { flex-direction: column; align-items: flex-start; gap: .75rem; }
+  .tab-header > div { width: 100%; }
+  .tab-header > div button,
+  .tab-header > div label { width: 100%; justify-content: center; }
+  .tab-header > button { width: 100%; justify-content: center; }
+
+  /* Forms */
+  .form-row { flex-direction: column; }
+  .field { min-width: unset; width: 100%; }
+  .form-actions { flex-direction: column; }
+  .form-actions button { width: 100%; }
+  .form-card { padding: 1.25rem 1rem; }
+
+  /* List rows */
+  .list-row { flex-wrap: wrap; gap: .5rem; }
+  .list-row .pin-display { font-size: .72rem; }
+
+  /* Review */
+  .review-header { flex-wrap: wrap; gap: .5rem; }
+  .review-grade { flex-direction: column; }
+  .review-grade .field { width: 100%; }
+
+  /* Modal */
+  .modal-overlay { padding: .5rem; align-items: flex-end; }
+  .modal-card { border-radius: 1.25rem 1.25rem 0 0; max-height: 95vh; }
+  .modal-large { max-width: 100%; }
+  .modal-header { padding: 1.25rem 1rem .75rem; }
+  .modal-body { padding: 1rem; }
+  .modal-footer { padding: .75rem 1rem; flex-direction: column; }
+  .modal-footer button { width: 100%; }
+
+  /* Questions builder */
+  .q-card-header { flex-wrap: wrap; gap: .4rem; }
+  .options-builder { gap: .5rem; }
+
+  /* Settings */
+  .addon-row { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .addon-row a { width: 100%; text-align: center; }
+  .plan-display { flex-direction: column; gap: .25rem; }
+
+  /* Student portal tabs */
+  .sp-tabs { overflow-x: auto; }
+  .sp-list { padding: 1rem; }
+  .sp-card { flex-direction: column; align-items: flex-start; gap: .75rem; }
+  .sp-card button, .sp-card a { width: 100%; text-align: center; justify-content: center; }
+  .sp-content { padding: 1rem; }
+  .sp-q-header { font-size: .72rem; }
+  .sp-nav { flex-wrap: wrap; gap: .5rem; }
+}
+
+@media (max-width: 480px) {
+  /* Landing */
+  .hero h1 { font-size: clamp(1.8rem, 8vw, 2.5rem); }
+  .feat-grid { grid-template-columns: 1fr; }
+  .about-stats { grid-template-columns: 1fr; }
+
+  /* Portal sidebar collapses to icons-only on tiny screens */
+  .sidebar-item span:not(.badge) { display: none; }
+  .sidebar-signout span { display: none; }
+  .sidebar-item { padding: .5rem .6rem; }
+
+  /* Student portal */
+  .sp-header { flex-wrap: wrap; gap: .4rem; }
+  .sp-submitted { font-size: .72rem; }
+  input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+}
