@@ -38,10 +38,10 @@ export function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
 
     // Format 1: "1)" or "1) texto"  — 7°, 8°, 9°
     // Format 2: "9. ¿Cuál..."       — Bachillerato
-    const qParen = /^(\d+)\)\s*(.*)/.exec(line)
+    const qParen = /^(\d+)\s*\)\s*(.*)/.exec(line)
     const qDot   = /^(\d+)\.\s+(.+)/.exec(line)
 
-    const isQParen = qParen && !/^[A-D]\)/.test(line)
+    const isQParen = qParen && !/^[A-D]\s*\)/.test(line)
     const isQDot   = qDot && !/^[A-D]\./.test(line) && parseInt(qDot[1]) <= 100
 
     const qMatch = isQParen ? qParen : isQDot ? qDot : null
