@@ -2208,3 +2208,41 @@ html, body { overflow-x: hidden; width: 100%; }
   .admin-stat   { min-width: 100px; padding: .75rem 1rem; }
   .admin-stat-n { font-size: 1.4rem; }
 }
+/* ── Admin tabs ─────────────────────────────────────────────── */
+.admin-tabs { display:flex; gap:.5rem; margin-bottom:1.5rem; border-bottom:2px solid var(--border,#E5E0D8); }
+.admin-tabs button { background:none; border:none; padding:.6rem 1.25rem; font-size:.9rem; color:#6B7280; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s,border-color .15s; }
+.admin-tabs button.active { color:var(--coral,#E85D3F); border-bottom-color:var(--coral,#E85D3F); font-weight:600; }
+.admin-tabs button:hover:not(.active) { color:#374151; }
+
+/* ── Email editor ───────────────────────────────────────────── */
+.admin-email-editor { max-width:780px; }
+.admin-email-note { background:#FEF9EC; border:1px solid #FCD34D; border-radius:8px; padding:.75rem 1rem; font-size:.83rem; color:#92400E; margin-bottom:1.25rem; }
+.admin-email-note code { background:#FEF3C7; padding:1px 5px; border-radius:4px; font-family:monospace; }
+.admin-field-label { display:block; font-size:.82rem; font-weight:600; color:#374151; margin-bottom:.35rem; }
+.admin-input { width:100%; box-sizing:border-box; padding:.6rem .85rem; border:1.5px solid var(--border,#E5E0D8); border-radius:8px; font-size:.9rem; color:#111827; background:#fff; outline:none; }
+.admin-input:focus { border-color:var(--coral,#E85D3F); }
+.admin-textarea { width:100%; box-sizing:border-box; padding:.75rem; border:1.5px solid var(--border,#E5E0D8); border-radius:8px; font-family:monospace; font-size:.78rem; color:#1F2937; line-height:1.5; resize:vertical; outline:none; background:#FAFAFA; }
+.admin-textarea:focus { border-color:var(--coral,#E85D3F); background:#fff; }
+.admin-preview-wrap { border:1.5px solid var(--border,#E5E0D8); border-radius:8px; overflow:hidden; }
+.admin-preview-iframe { width:100%; height:500px; border:none; display:block; }
+.admin-email-actions { display:flex; align-items:center; gap:1rem; margin-top:1rem; flex-wrap:wrap; }
+.admin-send-hint { margin-top:.5rem; width:100%; font-size:.8rem; color:#6B7280; background:#F3F4F6; border-radius:8px; padding:.6rem .9rem; line-height:1.7; }
+.admin-send-hint code { background:#E5E7EB; padding:1px 6px; border-radius:4px; font-family:monospace; }
+
+/* ── Admin campaign box ─────────────────────────────────────── */
+.admin-campaign-box { margin-top:2rem; border:1.5px solid var(--border,#E5E0D8); border-radius:12px; padding:1.5rem; background:#fff; }
+.admin-campaign-title { margin:0 0 .4rem; font-size:1rem; font-weight:700; color:#111827; }
+.admin-campaign-desc { margin:0 0 1.25rem; font-size:.85rem; color:#6B7280; line-height:1.5; }
+.admin-campaign-check-btn { min-width:160px; }
+.admin-campaign-loading { display:flex; align-items:center; gap:.6rem; color:#6B7280; font-size:.88rem; }
+.admin-campaign-ready { }
+.admin-campaign-count { margin:0 0 .6rem; font-size:.9rem; color:#374151; }
+.admin-campaign-empty { color:#059669; font-size:.9rem; }
+.admin-campaign-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:.35rem; }
+.admin-campaign-list li { display:flex; gap:.75rem; align-items:center; font-size:.85rem; padding:.4rem .6rem; background:#F9FAFB; border-radius:6px; }
+.admin-campaign-name { font-weight:600; color:#111827; min-width:120px; }
+.admin-campaign-done { }
+.admin-campaign-summary { display:flex; gap:1rem; align-items:center; font-size:.95rem; }
+.admin-campaign-error { display:flex; flex-direction:column; }
+.campaign-ok   { color:#059669; font-weight:600; }
+.campaign-fail { color:#DC2626; font-weight:600; }
