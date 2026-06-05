@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { TeacherProfile } from './types'
+import { validateEmail, validatePassword, validateName, validateText } from './validate'
 
 const toProfile = (r: any): TeacherProfile => ({
   id: r.id, email: r.email, fullName: r.full_name, schoolName: r.school_name ?? '',
@@ -13,19 +14,25 @@ const toProfile = (r: any): TeacherProfile => ({
 
 export const auth = {
   async signUp(email: string, password: string, fullName: string, schoolName: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    // Validar antes de enviar a Supabase Auth
+    const cleanEmail  = validateEmail(email)
+    validatePassword(password)
+    const cleanName   = validateName(fullName, 'El nombre completo')
+    const cleanSchool = validateText(schoolName, 'El nombre del aula', 120)
+    const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password })
     if (error) throw error
     if (!data.user) throw new Error('Revisá tu correo y confirmá tu cuenta para continuar.')
     const uid = data.user.id
     const { error: dbError } = await supabase.from('teachers').insert({
-      id: uid, email, full_name: fullName, school_name: schoolName,
+      id: uid, email: cleanEmail, full_name: cleanName, school_name: cleanSchool,
     })
     if (dbError && dbError.code !== '23505') throw new Error('Error al crear el perfil: ' + dbError.message)
     return uid
   },
 
   async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    const cleanEmail = validateEmail(email)
+    const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password })
     if (error) throw new Error(
       error.message.includes('Invalid login') ? 'Correo o contraseña incorrectos.' : error.message
     )

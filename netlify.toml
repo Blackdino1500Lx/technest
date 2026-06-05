@@ -7,3 +7,51 @@
   from = "/*"
   to   = "/index.html"
   status = 200
+
+# ── Security Headers ──────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+
+    # Bloquea clickjacking — la app no debe cargarse en iframes de terceros
+    X-Frame-Options = "DENY"
+
+    # Evita que el browser "adivine" el tipo de contenido (MIME sniffing)
+    X-Content-Type-Options = "nosniff"
+
+    # Legado XSS filter en browsers viejos
+    X-XSS-Protection = "1; mode=block"
+
+    # Cuánta info de referrer se envía a otros dominios
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Fuerza HTTPS por 1 año; incluye subdominios
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+    # Deshabilita funciones del browser que la app no necesita
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+
+    # Evita que una pestaña abierta por la app tenga referencia a ella (opener attacks)
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+
+    # Content Security Policy
+    # - script-src 'unsafe-inline': requerido por los bloques JSON-LD del index.html
+    # - style-src 'unsafe-inline': requerido por estilos dinámicos de React
+    # - img-src data: blob:: canvas.toDataURL() + previews de imágenes
+    # - connect-src *.supabase.co: API + Storage de Supabase
+    # - frame-src youtube.com: iframes de video en lecciones
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: blob: https://*.supabase.co https://supabase.co;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+      frame-src https://www.youtube.com https://www.youtube-nocookie.com;
+      media-src 'self' https://*.supabase.co;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+      upgrade-insecure-requests;
+    """

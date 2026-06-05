@@ -15,8 +15,8 @@ function ytEmbed(url: string): string | null {
 }
 
 // ── Subject section ───────────────────────────────────────────────
-function SubjectSection({ subject, lessons, students, onToggleActive, onRemove, onCreatePractice }: {
-  subject: Subject; lessons: Lesson[]; students: Student[]
+function SubjectSection({ subject, lessons, onToggleActive, onRemove, onCreatePractice }: {
+  subject: Subject; lessons: Lesson[]
   onToggleActive: (l: Lesson) => void; onRemove: (id: string) => void; onCreatePractice: (l: Lesson) => void
 }) {
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -222,7 +222,7 @@ export default function LessonsTab({ lessons, students, onReload }: Props) {
       {lessons.length === 0
         ? <p className="empty-msg">No hay lecciones aún. Creá una nueva para empezar.</p>
         : lessonsBySubject.map(({ subject, lessons: subjectLessons }) => (
-          <SubjectSection key={subject} subject={subject} lessons={subjectLessons} students={students}
+          <SubjectSection key={subject} subject={subject} lessons={subjectLessons}
             onToggleActive={toggleActive} onRemove={remove} onCreatePractice={setCreateTarget}/>
         ))
       }

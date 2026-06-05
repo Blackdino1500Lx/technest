@@ -1,5 +1,11 @@
 import { supabase } from './supabase'
 import type { Student, Lesson, Practice, Submission } from './types'
+import {
+  validateTitle, validateName, validatePin, validateSubject, validateGrade, validateLevel,
+  validateUUID, validateDate, validateContent, validateText,
+  validateStorageUrl, sanitizeUrl, validateFile, validateImageFile,
+  validateQuestion, ValidationError,
+} from './validate'
 
 const toStudent  = (r: any): Student  => ({ id: r.id, teacherId: r.teacher_id, firstName: r.first_name, lastName: r.last_name, grade: r.grade, level: r.level, pin: r.pin, createdAt: r.created_at })
 const toLesson   = (r: any): Lesson   => ({ id: r.id, teacherId: r.teacher_id, title: r.title, subject: r.subject, content: r.content ?? undefined, fileUrl: r.file_url ?? undefined, fileName: r.file_name ?? undefined, examKey: r.exam_key ?? undefined, youtubeUrl: r.youtube_url ?? undefined, pageImages: r.page_images ?? undefined, assignedTo: r.assigned_to ?? [], isActive: r.is_active, createdAt: r.created_at })
@@ -21,23 +27,44 @@ export const db = {
     },
     async add(s: Omit<Student,'id'|'createdAt'|'teacherId'>): Promise<Student> {
       const t = await tid()
+      const firstName = validateName(s.firstName, 'El nombre')
+      const lastName  = validateName(s.lastName,  'El apellido')
+      const pin       = validatePin(s.pin)
+      const grade     = validateGrade(s.grade)
+      const level     = validateLevel(s.level)
       const { data, error } = await supabase.from('students')
-        .insert({ teacher_id: t, first_name: s.firstName, last_name: s.lastName, grade: s.grade, level: s.level, pin: s.pin })
+        .insert({ teacher_id: t, first_name: firstName, last_name: lastName, grade, level, pin })
         .select().single()
       if (error) throw error; return toStudent(data)
     },
     async update(s: Pick<Student,'id'|'firstName'|'lastName'|'grade'|'level'|'pin'>): Promise<void> {
-      const { error } = await supabase.from('students').update({ first_name: s.firstName, last_name: s.lastName, grade: s.grade, level: s.level, pin: s.pin }).eq('id', s.id)
+      const t = await tid()
+      validateUUID(s.id, 'ID del alumno')
+      const firstName = validateName(s.firstName, 'El nombre')
+      const lastName  = validateName(s.lastName,  'El apellido')
+      const pin       = validatePin(s.pin)
+      const grade     = validateGrade(s.grade)
+      const level     = validateLevel(s.level)
+      const { error } = await supabase.from('students')
+        .update({ first_name: firstName, last_name: lastName, grade, level, pin })
+        .eq('id', s.id).eq('teacher_id', t)
       if (error) throw error
     },
-    async delete(id: string) { const { error } = await supabase.from('students').delete().eq('id', id); if (error) throw error },
+    async delete(id: string) {
+      const t = await tid()
+      validateUUID(id, 'ID del alumno')
+      const { error } = await supabase.from('students').delete().eq('id', id).eq('teacher_id', t)
+      if (error) throw error
+    },
     async findByPin(pin: string, teacherId: string): Promise<Student | null> {
-      const { data, error } = await supabase.from('students').select('*').eq('pin', pin).eq('teacher_id', teacherId).maybeSingle()
+      const cleanPin = validatePin(pin)
+      const { data, error } = await supabase.from('students').select('*').eq('pin', cleanPin).eq('teacher_id', teacherId).maybeSingle()
       if (error) throw error; return data ? toStudent(data) : null
     },
     async isPinTaken(pin: string, excludeId?: string): Promise<boolean> {
       const t = await tid()
-      let q = supabase.from('students').select('id').eq('pin', pin).eq('teacher_id', t)
+      const cleanPin = validatePin(pin)
+      let q = supabase.from('students').select('id').eq('pin', cleanPin).eq('teacher_id', t)
       if (excludeId) q = q.neq('id', excludeId)
       const { data } = await q; return (data?.length ?? 0) > 0
     },
@@ -51,18 +78,35 @@ export const db = {
     },
     async add(l: Omit<Lesson,'id'|'createdAt'|'teacherId'>): Promise<Lesson> {
       const t = await tid()
+      const title   = validateTitle(l.title)
+      const subject = validateSubject(l.subject)
+      const content = l.content ? validateContent(l.content) : null
+      const fileUrl = validateStorageUrl(l.fileUrl) ?? null
+      const ytUrl   = l.youtubeUrl ? sanitizeUrl(l.youtubeUrl) ?? null : null
       const { data, error } = await supabase.from('lessons')
-        .insert({ teacher_id: t, title: l.title, subject: l.subject, content: l.content ?? null, file_url: l.fileUrl ?? null, file_name: l.fileName ?? null, exam_key: l.examKey ?? null, youtube_url: l.youtubeUrl ?? null, page_images: l.pageImages ?? null, assigned_to: l.assignedTo, is_active: l.isActive })
+        .insert({ teacher_id: t, title, subject, content, file_url: fileUrl, file_name: l.fileName ?? null, exam_key: l.examKey ?? null, youtube_url: ytUrl, page_images: l.pageImages ?? null, assigned_to: l.assignedTo, is_active: l.isActive })
         .select().single()
       if (error) throw error; return toLesson(data)
     },
     async update(l: Lesson): Promise<void> {
+      const t = await tid()
+      validateUUID(l.id, 'ID de la leccion')
+      const title   = validateTitle(l.title)
+      const subject = validateSubject(l.subject)
+      const content = l.content ? validateContent(l.content) : null
+      const fileUrl = validateStorageUrl(l.fileUrl) ?? null
+      const ytUrl   = l.youtubeUrl ? sanitizeUrl(l.youtubeUrl) ?? null : null
       const { error } = await supabase.from('lessons')
-        .update({ title: l.title, subject: l.subject, content: l.content ?? null, file_url: l.fileUrl ?? null, file_name: l.fileName ?? null, exam_key: l.examKey ?? null, youtube_url: l.youtubeUrl ?? null, page_images: l.pageImages ?? null, assigned_to: l.assignedTo, is_active: l.isActive })
-        .eq('id', l.id)
+        .update({ title, subject, content, file_url: fileUrl, file_name: l.fileName ?? null, exam_key: l.examKey ?? null, youtube_url: ytUrl, page_images: l.pageImages ?? null, assigned_to: l.assignedTo, is_active: l.isActive })
+        .eq('id', l.id).eq('teacher_id', t)
       if (error) throw error
     },
-    async delete(id: string) { const { error } = await supabase.from('lessons').delete().eq('id', id); if (error) throw error },
+    async delete(id: string) {
+      const t = await tid()
+      validateUUID(id, 'ID de la leccion')
+      const { error } = await supabase.from('lessons').delete().eq('id', id).eq('teacher_id', t)
+      if (error) throw error
+    },
     async forStudent(studentId: string, teacherId: string): Promise<Lesson[]> {
       const { data, error } = await supabase.from('lessons').select('*').eq('is_active', true).eq('teacher_id', teacherId)
       if (error) throw error
@@ -78,20 +122,48 @@ export const db = {
     },
     async add(p: Omit<Practice,'id'|'createdAt'|'teacherId'>): Promise<Practice> {
       const t = await tid()
-      const { data, error } = await supabase.from('practices')
-        .insert({ teacher_id: t, title: p.title, subject: p.subject, description: p.description, questions: p.questions, assigned_to: p.assignedTo, due_date: p.dueDate || null, is_active: p.isActive, lesson_id: p.lessonId || null })
-        .select().single()
+      const title   = validateTitle(p.title)
+      const subject = validateSubject(p.subject)
+      const desc    = p.description ? validateText(p.description, 'La descripcion', 1000) : ''
+      const dueDate = p.dueDate ? validateDate(p.dueDate) : null
+      if (p.questions.length === 0) throw new ValidationError('La practica necesita al menos una pregunta.')
+      if (p.questions.length > 100) throw new ValidationError('La practica no puede tener mas de 100 preguntas.')
+      p.questions.forEach(q => validateQuestion(q))
+      const ins = {
+        teacher_id: t, title, subject, description: desc,
+        questions: p.questions, assigned_to: p.assignedTo,
+        due_date: dueDate, is_active: p.isActive,
+        lesson_id: p.lessonId || null,
+      }
+      const { data, error } = await supabase.from('practices').insert(ins).select().single()
       if (error) throw error; return toPractice(data)
     },
     async update(p: Practice): Promise<void> {
-      const { error } = await supabase.from('practices').update({ title: p.title, subject: p.subject, description: p.description, questions: p.questions, assigned_to: p.assignedTo, due_date: p.dueDate || null, is_active: p.isActive }).eq('id', p.id)
+      const t = await tid()
+      validateUUID(p.id, 'ID de la practica')
+      const title   = validateTitle(p.title)
+      const subject = validateSubject(p.subject)
+      const desc    = p.description ? validateText(p.description, 'La descripcion', 1000) : ''
+      const dueDate = p.dueDate ? validateDate(p.dueDate) : null
+      p.questions.forEach(q => validateQuestion(q))
+      const upd = {
+        title, subject, description: desc,
+        questions: p.questions, assigned_to: p.assignedTo,
+        due_date: dueDate, is_active: p.isActive,
+      }
+      const { error } = await supabase.from('practices').update(upd).eq('id', p.id).eq('teacher_id', t)
       if (error) throw error
     },
-    async delete(id: string) { const { error } = await supabase.from('practices').delete().eq('id', id); if (error) throw error },
+    async delete(id: string) {
+      const t = await tid()
+      validateUUID(id, 'ID de la practica')
+      const { error } = await supabase.from('practices').delete().eq('id', id).eq('teacher_id', t)
+      if (error) throw error
+    },
     async forStudent(studentId: string, teacherId: string): Promise<Practice[]> {
       const { data, error } = await supabase.from('practices').select('*').eq('is_active', true).eq('teacher_id', teacherId)
       if (error) throw error
-      return (data ?? []).map(toPractice).filter(p => p.assignedTo.includes(studentId))
+      return (data ?? []).map(toPractice).filter(pr => pr.assignedTo.includes(studentId))
     },
   },
 
@@ -102,13 +174,24 @@ export const db = {
       if (error) throw error; return (data ?? []).map(toSub)
     },
     async add(s: Omit<Submission,'id'|'submittedAt'>): Promise<Submission> {
-      const { data, error } = await supabase.from('submissions')
-        .insert({ teacher_id: s.teacherId, practice_id: s.practiceId, student_id: s.studentId, answers: s.answers, score: s.score ?? null, reviewed: s.reviewed, teacher_note: s.teacherNote ?? null, anti_cheat_flags: s.antiCheatFlags })
-        .select().single()
+      const ins = {
+        teacher_id: s.teacherId, practice_id: s.practiceId, student_id: s.studentId,
+        answers: s.answers, score: s.score ?? null, reviewed: s.reviewed,
+        teacher_note: s.teacherNote ?? null, anti_cheat_flags: s.antiCheatFlags,
+      }
+      const { data, error } = await supabase.from('submissions').insert(ins).select().single()
       if (error) throw error; return toSub(data)
     },
     async update(s: Submission) {
-      const { error } = await supabase.from('submissions').update({ score: s.score ?? null, reviewed: s.reviewed, teacher_note: s.teacherNote ?? null }).eq('id', s.id)
+      const t = await tid()
+      validateUUID(s.id, 'ID de la entrega')
+      if (s.score !== undefined) {
+        if (!Number.isFinite(s.score) || s.score < 0 || s.score > 10000)
+          throw new ValidationError('El puntaje debe ser un numero entre 0 y 10000.')
+      }
+      const note = s.teacherNote ? validateText(s.teacherNote, 'La nota', 2000) : null
+      const upd = { score: s.score ?? null, reviewed: s.reviewed, teacher_note: note }
+      const { error } = await supabase.from('submissions').update(upd).eq('id', s.id).eq('teacher_id', t)
       if (error) throw error
     },
     async exists(studentId: string, practiceId: string): Promise<boolean> {
@@ -118,10 +201,12 @@ export const db = {
   },
 
   storage: {
-    async uploadFile(file: File): Promise<{ url: string; name: string }> {
-      const ext  = file.name.split('.').pop()
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('materials').upload(path, file)
+    async uploadFile(file: File, imageOnly = false): Promise<{ url: string; name: string }> {
+      if (imageOnly) validateImageFile(file)
+      else           validateFile(file)
+      const ext  = file.name.split('.').pop()!.toLowerCase()
+      const path = Date.now() + '-' + crypto.randomUUID() + '.' + ext
+      const { error } = await supabase.storage.from('materials').upload(path, file, { upsert: false })
       if (error) throw error
       const { data } = supabase.storage.from('materials').getPublicUrl(path)
       return { url: data.publicUrl, name: file.name }
@@ -129,18 +214,20 @@ export const db = {
   },
 }
 
-// ── Question Images ───────────────────────────────────────────────
 export interface QuestionImage {
   id: string; examKey: string; fromQ: number; toQ: number
   imageUrl: string; imageName: string; createdAt: string
 }
-const toQImage = (r: any): QuestionImage => ({ id: r.id, examKey: r.exam_key, fromQ: r.from_q, toQ: r.to_q, imageUrl: r.image_url, imageName: r.image_name, createdAt: r.created_at })
+
+const toQImage = (r: any): QuestionImage => ({
+  id: r.id, examKey: r.exam_key, fromQ: r.from_q, toQ: r.to_q,
+  imageUrl: r.image_url, imageName: r.image_name, createdAt: r.created_at,
+})
 
 export const qImages = {
   async add(q: Omit<QuestionImage,'id'|'createdAt'>): Promise<QuestionImage> {
-    const { data, error } = await supabase.from('question_images')
-      .insert({ exam_key: q.examKey, from_q: q.fromQ, to_q: q.toQ, image_url: q.imageUrl, image_name: q.imageName })
-      .select().single()
+    const ins = { exam_key: q.examKey, from_q: q.fromQ, to_q: q.toQ, image_url: q.imageUrl, image_name: q.imageName }
+    const { data, error } = await supabase.from('question_images').insert(ins).select().single()
     if (error) throw error; return toQImage(data)
   },
   async forExam(examKey: string): Promise<QuestionImage[]> {
@@ -160,3 +247,5 @@ export const qImages = {
       .replace(/^_|_$/g, '')
   },
 }
+
+export { ValidationError }

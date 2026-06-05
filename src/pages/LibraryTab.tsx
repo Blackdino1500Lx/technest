@@ -91,8 +91,8 @@ function AssignModal({ lesson, students, onClose, onSave }: { lesson: Lesson; st
 }
 
 // ── Subject section ───────────────────────────────────────────────
-function SubjectSection({ subject, lessons, students, onAssign, onToggleActive, onCreatePractice, onDelete }: {
-  subject: Subject; lessons: Lesson[]; students: Student[]
+function SubjectSection({ subject, lessons, onAssign, onToggleActive, onCreatePractice, onDelete }: {
+  subject: Subject; lessons: Lesson[]
   onAssign: (l: Lesson) => void; onToggleActive: (l: Lesson) => void
   onCreatePractice: (l: Lesson) => void; onDelete: (l: Lesson) => void
 }) {
@@ -376,7 +376,7 @@ export default function LibraryTab({ lessons, students, onReload }: Props) {
       {filtered.length === 0
         ? <div className="empty-state"><FolderOpen size={40}/><p className="empty-msg">{lessons.length === 0 ? 'No hay materiales. Subí un ZIP o PDF para empezar.' : 'No hay materiales con ese filtro.'}</p></div>
         : lessonsBySubject.map(({ subject, lessons: subjectLessons }) => (
-          <SubjectSection key={subject} subject={subject} lessons={subjectLessons} students={students}
+          <SubjectSection key={subject} subject={subject} lessons={subjectLessons}
             onAssign={setAssignTarget} onToggleActive={toggleActive} onCreatePractice={setCreateTarget} onDelete={deleteLesson}/>
         ))
       }
