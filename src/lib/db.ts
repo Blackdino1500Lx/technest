@@ -35,6 +35,12 @@ export const db = {
       const { data, error } = await supabase.from('students').select('*').eq('pin', pin).eq('teacher_id', teacherId).maybeSingle()
       if (error) throw error; return data ? toStudent(data) : null
     },
+    async isPinTaken(pin: string, excludeId?: string): Promise<boolean> {
+      const t = await tid()
+      let q = supabase.from('students').select('id').eq('pin', pin).eq('teacher_id', t)
+      if (excludeId) q = q.neq('id', excludeId)
+      const { data } = await q; return (data?.length ?? 0) > 0
+    },
   },
 
   lessons: {
@@ -120,5 +126,37 @@ export const db = {
       const { data } = supabase.storage.from('materials').getPublicUrl(path)
       return { url: data.publicUrl, name: file.name }
     },
+  },
+}
+
+// ── Question Images ───────────────────────────────────────────────
+export interface QuestionImage {
+  id: string; examKey: string; fromQ: number; toQ: number
+  imageUrl: string; imageName: string; createdAt: string
+}
+const toQImage = (r: any): QuestionImage => ({ id: r.id, examKey: r.exam_key, fromQ: r.from_q, toQ: r.to_q, imageUrl: r.image_url, imageName: r.image_name, createdAt: r.created_at })
+
+export const qImages = {
+  async add(q: Omit<QuestionImage,'id'|'createdAt'>): Promise<QuestionImage> {
+    const { data, error } = await supabase.from('question_images')
+      .insert({ exam_key: q.examKey, from_q: q.fromQ, to_q: q.toQ, image_url: q.imageUrl, image_name: q.imageName })
+      .select().single()
+    if (error) throw error; return toQImage(data)
+  },
+  async forExam(examKey: string): Promise<QuestionImage[]> {
+    const { data, error } = await supabase.from('question_images').select('*').eq('exam_key', examKey)
+    if (error) throw error; return (data ?? []).map(toQImage)
+  },
+  findForQuestion(images: QuestionImage[], questionNum: number): QuestionImage | undefined {
+    return images.find(img => questionNum >= img.fromQ && questionNum <= img.toQ)
+  },
+  buildExamKey(input: string): string {
+    return input
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/\.pdf$/i, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '')
   },
 }

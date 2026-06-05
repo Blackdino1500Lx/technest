@@ -1,70 +1,119 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Student, TeacherProfile, Practice, Lesson, Answer } from '../lib/types'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
+import MathSandbox from '../components/MathSandbox'
 
 interface Props { student: Student; teacher: TeacherProfile; onLogout: () => void }
 
 export default function StudentPortal({ student, teacher, onLogout }: Props) {
-  const [tab, setTab]                 = useState<'practices'|'lessons'>('practices')
-  const [practices, setPractices]     = useState<Practice[]>([])
-  const [lessons, setLessons]         = useState<Lesson[]>([])
-  const [active, setActive]           = useState<Practice | null>(null)
-  const [answers, setAnswers]         = useState<Record<string, string|number>>({})
-  const [submitting, setSubmitting]   = useState(false)
-  const [done, setDone]               = useState(false)
-  const [submitted, setSubmitted]     = useState<string[]>([])
+  const [tab, setTab]               = useState<'practices'|'lessons'>('practices')
+  const [practices, setPractices]   = useState<Practice[]>([])
+  const [lessons, setLessons]       = useState<Lesson[]>([])
+  const [active, setActive]         = useState<Practice | null>(null)
+  const [linkedLesson, setLinkedLesson] = useState<Lesson | null>(null)
+  const [showLesson, setShowLesson] = useState(false)
+  const [answers, setAnswers]       = useState<Record<string, string|number>>({})
+  const [canvasAnswers, setCanvasAnswers] = useState<Record<string, string>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone]             = useState(false)
+  const [submitted, setSubmitted]   = useState<string[]>([])
+  const antiCheatFlags              = useRef<string[]>([])
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     const [ps, ls] = await Promise.all([
-      supabase.from('practices').select('*').eq('is_active', true).eq('teacher_id', teacher.id),
-      supabase.from('lessons').select('*').eq('is_active', true).eq('teacher_id', teacher.id),
+      db.practices.forStudent(student.id, teacher.id),
+      db.lessons.forStudent(student.id, teacher.id),
     ])
-    const allP = ((ps.data ?? []) as any[])
-      .map((r: any) => ({ id: r.id, teacherId: r.teacher_id, title: r.title, subject: r.subject, description: r.description ?? '', questions: r.questions ?? [], assignedTo: r.assigned_to ?? [], dueDate: r.due_date ?? undefined, createdAt: r.created_at, isActive: r.is_active, lessonId: r.lesson_id ?? undefined }))
-      .filter((p: Practice) => p.assignedTo.includes(student.id))
-    const allL = ((ls.data ?? []) as any[])
-      .map((r: any) => ({ id: r.id, teacherId: r.teacher_id, title: r.title, subject: r.subject, content: r.content ?? undefined, fileUrl: r.file_url ?? undefined, fileName: r.file_name ?? undefined, examKey: r.exam_key ?? undefined, youtubeUrl: r.youtube_url ?? undefined, pageImages: r.page_images ?? undefined, assignedTo: r.assigned_to ?? [], isActive: r.is_active, createdAt: r.created_at }))
-      .filter((l: Lesson) => l.assignedTo.includes(student.id))
-    setPractices(allP); setLessons(allL)
+    setPractices(ps); setLessons(ls)
 
-    // Check which practices are already submitted
     const ids: string[] = []
-    for (const p of allP) {
-      const { data } = await supabase.from('submissions').select('id').eq('student_id', student.id).eq('practice_id', p.id).maybeSingle()
-      if (data) ids.push(p.id)
+    for (const p of ps) {
+      if (await db.submissions.exists(student.id, p.id)) ids.push(p.id)
     }
     setSubmitted(ids)
+  }
+
+  const startPractice = (p: Practice) => {
+    setActive(p)
+    setAnswers({})
+    setCanvasAnswers({})
+    antiCheatFlags.current = []
+
+    // If practice has a linked lesson, offer to view it first
+    if (p.lessonId) {
+      const lesson = lessons.find(l => l.id === p.lessonId)
+      if (lesson) { setLinkedLesson(lesson); setShowLesson(true); return }
+    }
+    setLinkedLesson(null); setShowLesson(false)
   }
 
   const submit = async () => {
     if (!active) return
     setSubmitting(true)
     try {
-      const answerArr: Answer[] = active.questions.map(q => ({ questionId: q.id, value: answers[q.id] ?? '' }))
+      const answerArr: Answer[] = active.questions.map(q => ({
+        questionId: q.id,
+        value: answers[q.id] ?? '',
+        canvasImage: canvasAnswers[q.id],
+      }))
       const correct = active.questions.filter(q => q.type === 'multiple' && answers[q.id] === q.correctOption).length
       const total   = active.questions.filter(q => q.type === 'multiple').length
       const score   = total > 0 ? Math.round((correct / total) * active.questions.reduce((a, q) => a + (q.points ?? 0), 0)) : undefined
 
-      await supabase.from('submissions').insert({
-        teacher_id: teacher.id, practice_id: active.id, student_id: student.id,
-        answers: answerArr, score: score ?? null, reviewed: false,
-        teacher_note: null, anti_cheat_flags: [],
+      await db.submissions.add({
+        teacherId: teacher.id, practiceId: active.id, studentId: student.id,
+        answers: answerArr, score, reviewed: false,
+        teacherNote: undefined, antiCheatFlags: antiCheatFlags.current,
       })
       setDone(true)
-      setTimeout(() => { setDone(false); setActive(null); setAnswers({}); loadData() }, 1500)
+      setTimeout(() => { setDone(false); setActive(null); setLinkedLesson(null); setAnswers({}); setCanvasAnswers({}); loadData() }, 1500)
     } catch (e: any) { alert(e.message) }
     finally { setSubmitting(false) }
   }
 
+  // ── Lesson viewer (before practice) ─────────────────────────────
+  if (showLesson && linkedLesson && active) return (
+    <div className="sp-practice">
+      <div className="sp-nav">
+        <button className="btn-ghost" onClick={() => { setActive(null); setShowLesson(false) }}>← Mis prácticas</button>
+        <span className="subject-badge">{linkedLesson.subject}</span>
+      </div>
+      <div className="sp-content">
+        <h1>📖 {linkedLesson.title}</h1>
+        {linkedLesson.content && <p className="sp-desc" style={{ whiteSpace: 'pre-line' }}>{linkedLesson.content}</p>}
+        {linkedLesson.fileUrl && (
+          <a href={linkedLesson.fileUrl} target="_blank" rel="noreferrer" className="btn-outline" style={{ display: 'inline-block', marginBottom: 12 }}>
+            📄 Ver documento de la lección
+          </a>
+        )}
+        {linkedLesson.youtubeUrl && (
+          <div style={{ marginBottom: 20 }}>
+            {(() => { const m = linkedLesson.youtubeUrl.match(/(?:youtu\.be\/|v=|embed\/)([a-zA-Z0-9_-]{11})/); return m ? (
+              <iframe width="100%" height="260" src={`https://www.youtube.com/embed/${m[1]}`}
+                allowFullScreen style={{ borderRadius: 10, border: 'none' }}/>
+            ) : null })()}
+          </div>
+        )}
+        <button className="btn-primary full" onClick={() => setShowLesson(false)}>
+          Ir a la práctica →
+        </button>
+      </div>
+    </div>
+  )
+
+  // ── Active practice ──────────────────────────────────────────────
   if (active) return (
     <div className="sp-practice">
       <div className="sp-nav">
-        <button className="btn-ghost" onClick={() => setActive(null)}>← Mis prácticas</button>
+        <button className="btn-ghost" onClick={() => { setActive(null); setLinkedLesson(null) }}>← Mis prácticas</button>
         <span className="subject-badge">{active.subject}</span>
+        {linkedLesson && (
+          <button className="btn-ghost" onClick={() => setShowLesson(true)} style={{ marginLeft: 'auto', fontSize: '.8rem' }}>
+            📖 Ver lección
+          </button>
+        )}
       </div>
       <div className="sp-content">
         <h1>{active.title}</h1>
@@ -74,7 +123,15 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
             {active.questions.map((q, i) => (
               <div key={q.id} className="sp-question">
                 <div className="sp-q-header"><span>Pregunta {i+1}</span><span>{q.points} pts</span></div>
+
+                {/* Question image */}
+                {q.imageUrl && (
+                  <img src={q.imageUrl} alt={`Figura pregunta ${i+1}`}
+                    style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 10, display: 'block' }}/>
+                )}
+
                 <p className="sp-q-text">{q.text}</p>
+
                 {q.type === 'multiple' && q.options ? (
                   <div className="sp-options">
                     {q.options.map((opt, oi) => (
@@ -84,6 +141,15 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
                       </label>
                     ))}
                   </div>
+                ) : q.hasSandbox ? (
+                  <MathSandbox
+                    textValue={(answers[q.id] as string) ?? ''}
+                    canvasValue={canvasAnswers[q.id] ?? ''}
+                    onTextChange={v => setAnswers(p => ({...p, [q.id]: v}))}
+                    onCanvasChange={v => setCanvasAnswers(p => ({...p, [q.id]: v}))}
+                    flagsRef={antiCheatFlags}
+                    placeholder="Escribí tu desarrollo aquí..."
+                  />
                 ) : (
                   <textarea className="sp-textarea" rows={4} value={(answers[q.id] as string) ?? ''}
                     onChange={e => setAnswers(p => ({...p, [q.id]: e.target.value}))}
@@ -100,6 +166,7 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
     </div>
   )
 
+  // ── Dashboard ────────────────────────────────────────────────────
   return (
     <div className="sp-shell">
       <header className="sp-header">
@@ -122,7 +189,7 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
               </div>
               {submitted.includes(p.id)
                 ? <span className="sp-submitted">✓ Entregado</span>
-                : <button className="btn-primary" onClick={() => { setActive(p); setAnswers({}) }}>Hacer práctica →</button>
+                : <button className="btn-primary" onClick={() => startPractice(p)}>Hacer práctica →</button>
               }
             </div>
           ))
@@ -134,7 +201,10 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
                 <h3>{l.title}</h3>
                 <span className="subject-badge sm">{l.subject}</span>
               </div>
-              {l.fileUrl && <a className="btn-outline" href={l.fileUrl} target="_blank">Ver PDF</a>}
+              <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+                {l.fileUrl && <a className="btn-outline" href={l.fileUrl} target="_blank" rel="noreferrer">Ver PDF</a>}
+                {l.youtubeUrl && <a className="btn-outline" href={l.youtubeUrl} target="_blank" rel="noreferrer">▶ Video</a>}
+              </div>
             </div>
           ))
         )}

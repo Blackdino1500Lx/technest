@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { db } from '../lib/db'
 import { auth } from '../lib/auth'
 import type { TeacherProfile, Student, Lesson, Practice, Submission, Grade, Level, Subject } from '../lib/types'
-import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Library, ExternalLink } from 'lucide-react'
+import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Library } from 'lucide-react'
 import CreatePracticeModal from './CreatePracticeModal'
+import LibraryTab from './LibraryTab'
+import LessonsTab from './LessonsTab'
 
 interface Props {
   profile: TeacherProfile
@@ -172,185 +174,6 @@ function StudentsTab({ students, onReload, profile }: { students: Student[]; onR
   )
 }
 
-// ── LIBRARY TAB ──────────────────────────────────────────────────────
-function LibraryTab({ lessons, students, onReload }: { lessons: Lesson[]; students: Student[]; onReload: () => void }) {
-  const withFile = lessons.filter(l => l.fileUrl)
-  const [assigning, setAssigning] = useState<string|null>(null)
-  const [assigned, setAssigned]   = useState<string[]>([])
-  const [saving, setSaving]       = useState(false)
-
-  const openAssign = (l: Lesson) => { setAssigning(l.id); setAssigned(l.assignedTo) }
-
-  const saveAssign = async (l: Lesson) => {
-    setSaving(true)
-    try { await db.lessons.update({ ...l, assignedTo: assigned }); setAssigning(null); onReload() }
-    finally { setSaving(false) }
-  }
-
-  return (
-    <div className="tab-content">
-      <div className="tab-header"><h2>Biblioteca ({withFile.length})</h2></div>
-      {withFile.length === 0
-        ? <p className="empty-msg">No hay archivos subidos. Adjuntá PDFs desde la pestaña Lecciones.</p>
-        : <div className="cards-grid">
-            {withFile.map(l => (
-              <div key={l.id} className="lesson-card">
-                <div className="lesson-card-top">
-                  <span className="subject-badge">{l.subject}</span>
-                  <span className={`status-dot ${l.isActive?'active':''}`}/>
-                </div>
-                <h3>{l.title}</h3>
-                <p className="lesson-yt">📄 {l.fileName ?? 'Archivo adjunto'}</p>
-                <p className="lesson-students">👥 {l.assignedTo.length} alumno{l.assignedTo.length!==1?'s':''}</p>
-
-                {assigning === l.id ? (
-                  <div style={{marginTop:'.5rem'}}>
-                    <div className="chip-grid">
-                      {students.map(s => (
-                        <label key={s.id} className={`chip ${assigned.includes(s.id)?'selected':''}`}>
-                          <input type="checkbox" checked={assigned.includes(s.id)}
-                            onChange={e => setAssigned(p => e.target.checked ? [...p,s.id] : p.filter(x=>x!==s.id))}/>
-                          {s.firstName} {s.lastName}
-                        </label>
-                      ))}
-                    </div>
-                    <div className="form-actions" style={{marginTop:'.5rem'}}>
-                      <button className="btn-outline" onClick={() => setAssigning(null)}>Cancelar</button>
-                      <button className="btn-primary" onClick={() => saveAssign(l)} disabled={saving}>Guardar</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{display:'flex',gap:'.5rem',marginTop:'auto',flexWrap:'wrap'}}>
-                    <a href={l.fileUrl} target="_blank" rel="noreferrer" className="btn-danger-sm" style={{textDecoration:'none',display:'flex',alignItems:'center',gap:'.3rem'}}>
-                      <ExternalLink size={12}/> Ver archivo
-                    </a>
-                    <button className="btn-danger-sm" style={{borderColor:'#c7d2fe',background:'#eef2ff',color:'#4338ca'}} onClick={() => openAssign(l)}>
-                      Asignar alumnos
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-      }
-    </div>
-  )
-}
-
-// ── LESSONS TAB ──────────────────────────────────────────────────────
-function LessonsTab({ lessons, students, onReload }: { lessons: Lesson[]; students: Student[]; onReload: () => void }) {
-  const [showForm, setShowForm] = useState(false)
-  const [editLesson, setEditLesson] = useState<Lesson|null>(null)
-  const [title, setTitle]     = useState('')
-  const [subject, setSubject] = useState<Subject>('Matemáticas')
-  const [content, setContent] = useState('')
-  const [ytUrl, setYtUrl]     = useState('')
-  const [assigned, setAssigned] = useState<string[]>([])
-  const [pdfFile, setPdfFile]   = useState<File|null>(null)
-  const [saving, setSaving]     = useState(false)
-
-  const openNew = () => {
-    setEditLesson(null); setTitle(''); setSubject('Matemáticas')
-    setContent(''); setYtUrl(''); setAssigned([]); setPdfFile(null); setShowForm(true)
-  }
-  const openEdit = (l: Lesson) => {
-    setEditLesson(l); setTitle(l.title); setSubject(l.subject)
-    setContent(l.content ?? ''); setYtUrl(l.youtubeUrl ?? '')
-    setAssigned(l.assignedTo); setPdfFile(null); setShowForm(true)
-  }
-  const cancel = () => { setShowForm(false); setEditLesson(null) }
-
-  const save = async () => {
-    if (!title.trim()) return; setSaving(true)
-    try {
-      let fileUrl = editLesson?.fileUrl; let fileName = editLesson?.fileName
-      if (pdfFile) { const up = await db.storage.uploadFile(pdfFile); fileUrl = up.url; fileName = up.name }
-      if (editLesson) {
-        await db.lessons.update({ ...editLesson, title, subject, content: content||undefined, youtubeUrl: ytUrl||undefined, fileUrl, fileName, assignedTo: assigned })
-      } else {
-        await db.lessons.add({ title, subject, content: content||undefined, youtubeUrl: ytUrl||undefined, fileUrl, fileName, assignedTo: assigned, isActive: true })
-      }
-      cancel(); onReload()
-    } finally { setSaving(false) }
-  }
-
-  return (
-    <div className="tab-content">
-      <div className="tab-header">
-        <h2>Lecciones ({lessons.length})</h2>
-        <button className="btn-primary" onClick={openNew}><Plus size={14}/> Nueva lección</button>
-      </div>
-
-      {showForm && (
-        <div className="form-card">
-          <h3>{editLesson ? 'Editar lección' : 'Nueva lección'}</h3>
-          <div className="form-row">
-            <div className="field full"><label>Título</label><input value={title} onChange={e => setTitle(e.target.value)}/></div>
-          </div>
-          <div className="form-row">
-            <div className="field"><label>Materia</label>
-              <select value={subject} onChange={e => setSubject(e.target.value as Subject)}>
-                {SUBJECTS.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="field full"><label>Video YouTube (opcional)</label>
-              <input value={ytUrl} onChange={e => setYtUrl(e.target.value)} placeholder="https://youtube.com/..."/>
-            </div>
-          </div>
-          <div className="field full"><label>Contenido / Explicación</label>
-            <textarea rows={4} value={content} onChange={e => setContent(e.target.value)} placeholder="Escribe aquí el contenido de la lección..."/>
-          </div>
-          <div className="field full">
-            <label>Adjuntar archivo (PDF, Word, PPT)</label>
-            <div className="file-upload-row">
-              <label className="file-upload-btn">
-                📎 {pdfFile ? pdfFile.name : (editLesson?.fileName ?? 'Seleccionar archivo')}
-                <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" style={{display:'none'}} onChange={e => setPdfFile(e.target.files?.[0] ?? null)}/>
-              </label>
-              {(pdfFile || editLesson?.fileUrl) && <button className="btn-ghost" onClick={() => setPdfFile(null)}>✕ Quitar</button>}
-            </div>
-          </div>
-          <div className="field full"><label>Asignar a alumnos</label>
-            <div className="chip-grid">
-              {students.map(s => (
-                <label key={s.id} className={`chip ${assigned.includes(s.id)?'selected':''}`}>
-                  <input type="checkbox" checked={assigned.includes(s.id)}
-                    onChange={e => setAssigned(prev => e.target.checked ? [...prev,s.id] : prev.filter(x=>x!==s.id))}/>
-                  {s.firstName} {s.lastName}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="form-actions">
-            <button className="btn-outline" onClick={cancel}>Cancelar</button>
-            <button className="btn-primary" onClick={save} disabled={saving}>{saving?'Guardando...':'Guardar'}</button>
-          </div>
-        </div>
-      )}
-
-      <div className="cards-grid">
-        {lessons.length === 0 ? <p className="empty-msg">No hay lecciones aún.</p> :
-          lessons.map(l => (
-            <div key={l.id} className="lesson-card">
-              <div className="lesson-card-top">
-                <span className="subject-badge">{l.subject}</span>
-                <span className={`status-dot ${l.isActive?'active':''}`}/>
-              </div>
-              <h3>{l.title}</h3>
-              {l.youtubeUrl && <p className="lesson-yt">▶ Video adjunto</p>}
-              {l.fileUrl && <p className="lesson-yt">📄 {l.fileName ?? 'Archivo'}</p>}
-              <p className="lesson-students">👥 {l.assignedTo.length} alumno{l.assignedTo.length!==1?'s':''}</p>
-              <div style={{display:'flex',gap:'.4rem',marginTop:'auto',flexWrap:'wrap'}}>
-                <button className="btn-danger-sm" style={{borderColor:'#bfdbfe',background:'#eff6ff',color:'#1d4ed8'}} onClick={() => openEdit(l)}><Pencil size={11}/> Editar</button>
-                <button className="btn-danger-sm" onClick={async () => { await db.lessons.delete(l.id); onReload() }}>Eliminar</button>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-    </div>
-  )
-}
 
 // ── PRACTICES TAB ────────────────────────────────────────────────────
 function PracticesTab({ practices, students, onReload }: { practices: Practice[]; students: Student[]; onReload: () => void }) {
@@ -435,7 +258,7 @@ function PracticesTab({ practices, students, onReload }: { practices: Practice[]
       {pdfModal && (
         <CreatePracticeModal
           students={students}
-          initialFile={pdfModal}
+          file={pdfModal}
           onClose={() => setPdfModal(null)}
           onSaved={() => { setPdfModal(null); onReload() }}
         />
@@ -499,6 +322,10 @@ function PracticesTab({ practices, students, onReload }: { practices: Practice[]
                   <button className="icon-btn danger" onClick={() => removeQ(q.id)}><X size={12}/></button>
                 </div>
                 <textarea rows={2} value={q.text} onChange={e => updateQ(q.id,{text:e.target.value})} placeholder="Enunciado de la pregunta..."/>
+                <label className="sandbox-toggle-label" style={{margin:'4px 0'}}>
+                  <input type="checkbox" checked={q.hasSandbox ?? false} onChange={e => updateQ(q.id,{hasSandbox:e.target.checked})}/>
+                  <span>🎨 Sandbox</span>
+                </label>
                 {q.type==='multiple' && q.options && (
                   <div className="options-builder">
                     {q.options.map((opt: string, oi: number) => (
