@@ -100,7 +100,7 @@ export default function AdminPanel() {
     let ts = (tList ?? []) as Teacher[]
     const cmap: Record<string, number> = {}
     for (const s of sList ?? []) cmap[s.teacher_id] = (cmap[s.teacher_id] ?? 0) + 1
-    const toClose = ts.filter(t => t.plan === 'basic' && renewalInfo(t.created_at).overdue)
+    const toClose = ts.filter(t => t.plan === 'basic' && t.email !== ADMIN_EMAIL && renewalInfo(t.created_at).overdue)
     if (toClose.length > 0) {
       await Promise.all(toClose.map(t => supabase.from('teachers').update({ plan: 'free' }).eq('id', t.id)))
       ts = ts.map(t => toClose.find(c => c.id === t.id) ? { ...t, plan: 'free' } : t)
