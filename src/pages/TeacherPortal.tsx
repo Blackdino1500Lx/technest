@@ -9,6 +9,60 @@ import LibraryTab from './LibraryTab'
 import LessonsTab from './LessonsTab'
 import { supabase } from '../lib/supabase'
 
+// ── Sandbox answer viewer ────────────────────────────────────────
+function parseSandboxVal(v: string | number | undefined): { html: string; css: string; js: string } | null {
+  if (typeof v !== 'string') return null
+  try {
+    const p = JSON.parse(v)
+    if (p && typeof p === 'object' && ('html' in p || 'css' in p || 'js' in p))
+      return { html: p.html ?? '', css: p.css ?? '', js: p.js ?? '' }
+  } catch { /* not JSON */ }
+  return null
+}
+
+function buildPreview(c: { html: string; css: string; js: string }): string {
+  const safeJs = c.js.replace(/<\/script>/gi, '<\/script>')
+  return `<!DOCTYPE html><html><head><meta charset=utf-8><style>${c.css}</style></head><body>${c.html}<script>${safeJs}<\/script></body></html>`
+}
+
+function SandboxAnswerView({ value }: { value: string | number | undefined }) {
+  const [tab, setTab] = useState<'html' | 'css' | 'js'>('html')
+  const [preview, setPreview] = useState(false)
+  const code = parseSandboxVal(value)
+  if (!code) return <em style={{ color: 'var(--muted)' }}>Sin respuesta</em>
+  const tabs: Array<{ id: 'html' | 'css' | 'js'; label: string }> = [
+    { id: 'html', label: 'HTML' }, { id: 'css', label: 'CSS' }, { id: 'js', label: 'JS' },
+  ]
+  return (
+    <div style={{ marginTop: 6, borderRadius: 8, overflow: 'hidden', border: '1.5px solid var(--border,#E5E0D8)' }}>
+      <div style={{ display: 'flex', background: '#1F2937', padding: '4px 8px', gap: 4, alignItems: 'center' }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => { setTab(t.id); setPreview(false) }}
+            style={{ padding: '2px 10px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: '.78rem', fontWeight: 600,
+              background: !preview && tab === t.id ? '#374151' : 'transparent',
+              color: !preview && tab === t.id ? '#fff' : '#9CA3AF' }}>
+            {t.label}
+          </button>
+        ))}
+        <button onClick={() => setPreview(true)}
+          style={{ marginLeft: 'auto', padding: '2px 10px', borderRadius: 4, border: 'none', cursor: 'pointer',
+            fontSize: '.78rem', fontWeight: 600,
+            background: preview ? '#1E9E8E' : 'transparent', color: preview ? '#fff' : '#9CA3AF' }}>
+          ▶ Vista previa
+        </button>
+      </div>
+      {preview
+        ? <iframe srcDoc={buildPreview(code)} sandbox=allow-scripts title=preview
+            style={{ width: '100%', height: 180, border: 'none', background: '#fff' }}/>
+        : <pre style={{ margin: 0, padding: '10px 12px', background: '#111827', color: '#E5E7EB',
+            fontSize: '.78rem', overflowX: 'auto', minHeight: 60, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {code[tab] || <em style={{ color: '#6B7280' }}>Vacío</em>}
+          </pre>
+      }
+    </div>
+  )
+}
+
 interface Props {
   profile: TeacherProfile
   onProfileUpdate: (p: TeacherProfile) => void
@@ -427,7 +481,9 @@ function ReviewsTab({ subs, students, practices, onReload }: { subs: Submission[
                   <div className={`review-ans ${isCorrect?'correct':''} ${isWrong?'wrong':''}`}>
                     {q.type==='multiple'
                       ? <span>{isCorrect?'✓':'✗'} Respondió: {q.options?.[ans?.value as number] ?? '—'} · Correcta: {q.options?.[q.correctOption??0]}</span>
-                      : <span>{(ans?.value as string)||<em>Sin respuesta</em>}</span>
+                      : q.hasSandbox
+                        ? <SandboxAnswerView value={ans?.value}/>
+                        : <span>{(ans?.value as string)||<em>Sin respuesta</em>}</span>
                     }
                   </div>
                 </div>
