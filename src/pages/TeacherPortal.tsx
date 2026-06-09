@@ -78,7 +78,7 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
             {tab === 'practices' && <PracticesTab practices={practices} students={students} onReload={loadAll}/>}
             {tab === 'reviews'   && <ReviewsTab   subs={subs} students={students} practices={practices} onReload={loadAll}/>}
             {tab === 'settings'  && <SettingsTab  profile={profile} onProfileUpdate={onProfileUpdate}/>}
-            {tab === 'resources' && <ResourcesTab/>}
+            {tab === 'resources' && <ResourcesTab profile={profile}/>}
           </>
         )}
       </main>
@@ -551,7 +551,7 @@ const DOCS = [
 
 type FeedbackType = 'bug' | 'sugerencia' | 'pregunta'
 
-function ResourcesTab() {
+function ResourcesTab({ profile }: { profile: TeacherProfile }) {
   const [type, setType]     = useState<FeedbackType>('bug')
   const [msg, setMsg]       = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
@@ -563,7 +563,7 @@ function ResourcesTab() {
     setErrMsg('')
     try {
       const { error } = await supabase.functions.invoke('send-feedback', {
-        body: { type, message: msg.trim() },
+        body: { type, message: msg.trim(), academy: profile.schoolName || profile.logoText, teacherEmail: profile.email },
       })
       if (error) throw error
       setStatus('done')

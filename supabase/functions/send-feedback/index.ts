@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Sesion invalida' }), { status: 403, headers: corsHeaders })
     }
 
-    const { type, message } = await req.json()
+    const { type, message, academy, teacherEmail } = await req.json()
     if (!message?.trim()) {
       return new Response(JSON.stringify({ error: 'Mensaje vacio' }), { status: 400, headers: corsHeaders })
     }
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     }
     const label   = typeLabels[type] ?? type
     const subject = `[TeachNest Feedback] ${label}`
-    const html    = buildFeedbackHtml(label, message, user.email ?? 'desconocido')
+    const html    = buildFeedbackHtml(label, message, teacherEmail ?? user.email ?? 'desconocido', academy)
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -76,8 +76,14 @@ Deno.serve(async (req) => {
   }
 })
 
-function buildFeedbackHtml(type: string, message: string, from: string): string {
-  const safeMsg = message.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+function buildFeedbackHtml(type: string, message: string, from: string, academy?: string): string {
+  const safeMsg     = message.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+  const safeAcademy = (academy ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const badgeClass  = type === 'Sugerencia de mejora' ? 'sug' : type === 'Consulta' ? 'preg' : ''
+  const signature   = safeAcademy
+    ? `<div class="sig"><strong>${safeAcademy}</strong><br><span>${from}</span></div>`
+    : `<div class="sig"><span>${from}</span></div>`
+
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
 body{font-family:-apple-system,sans-serif;background:#f9fafb;margin:0;padding:0}
 .wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
@@ -88,13 +94,14 @@ body{font-family:-apple-system,sans-serif;background:#f9fafb;margin:0;padding:0}
 .badge.sug{background:#ECFDF5;color:#059669}
 .badge.preg{background:#EFF6FF;color:#2563EB}
 .msg-box{background:#F9FAFB;border:1.5px solid #E5E7EB;border-radius:8px;padding:16px;font-size:14px;color:#1F2937;line-height:1.7}
-.meta{margin-top:20px;font-size:12px;color:#9CA3AF}
+.sig{margin-top:20px;padding-top:16px;border-top:1px solid #E5E7EB;font-size:12px;color:#6B7280}
+.sig strong{display:block;font-size:13px;color:#374151;margin-bottom:2px}
 </style></head><body><div class="wrap">
 <div class="header"><h1>TeachNest Feedback</h1><p>Nuevo mensaje del panel del profesor</p></div>
 <div class="body">
-<span class="badge ${type === 'Sugerencia de mejora' ? 'sug' : type === 'Consulta' ? 'preg' : ''}">${type}</span>
+<span class="badge ${badgeClass}">${type}</span>
 <div class="msg-box">${safeMsg}</div>
-<p class="meta">Enviado por: <strong>${from}</strong></p>
+${signature}
 </div>
 </div></body></html>`
 }
