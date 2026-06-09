@@ -5,7 +5,7 @@ import { db, qImages } from '../lib/db'
 import CreatePracticeModal from './CreatePracticeModal'
 import { Plus, Trash2, AlertTriangle, Loader2, FileText, Eye, EyeOff, Upload, Sparkles } from 'lucide-react'
 
-const SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés']
+const SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés', 'Informática']
 
 interface Props { lessons: Lesson[]; students: Student[]; onReload: () => void }
 

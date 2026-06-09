@@ -10,8 +10,8 @@ import {
 
 interface Props { lessons: Lesson[]; students: Student[]; onReload: () => void }
 
-const SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés']
-const GRADES: Grade[]     = ['7° Grado', '8° Grado', '9° Grado', '10° Grado', '11° Grado', 'Universitario', 'Adulto']
+const SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés', 'Informática']
+const GRADES: Grade[]     = ['7° Grado', '8° Grado', '9° Grado', '10° Grado', '11° Grado', 'Universitario', 'Adulto', 'Técnico']
 
 function detectGrade(path: string): Grade {
   const p = path.toLowerCase()
@@ -289,7 +289,7 @@ export default function LibraryTab({ lessons, students, onReload }: Props) {
       {/* Single PDF modal */}
       {pendingFile && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setPendingFile(null)}>
-          <div className="modal-card" style={{ maxWidth: 520 }}>
+          <div className="modal-card" style={{ maxWidth: 680, width: "92vw" }}>
             <div className="modal-header">
               <div><h3>Agregar material educativo</h3><p className="modal-subtitle" style={{ padding: 0, marginTop: 4 }}>📄 {pendingFile.name}</p></div>
               <button className="icon-btn" onClick={() => setPendingFile(null)}><X size={18}/></button>
