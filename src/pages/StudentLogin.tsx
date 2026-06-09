@@ -9,7 +9,7 @@ interface Props { onBack: () => void }
 
 // Sanitiza el código de aula: sólo alfanumérico + espacios, máx 60 chars
 function sanitizeClassCode(v: string): string {
-  return v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.]/g, '').slice(0, 60).trim()
+  return v.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.\+\&\']/g, '').slice(0, 60).trim()
 }
 
 export default function StudentLogin({ onBack }: Props) {
