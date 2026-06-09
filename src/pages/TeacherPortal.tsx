@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { db } from '../lib/db'
 import { auth } from '../lib/auth'
+import { applyTheme } from '../lib/theme'
 import type { TeacherProfile, Student, Lesson, Practice, Submission, Grade, Level, Subject } from '../lib/types'
 import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Library } from 'lucide-react'
 import CreatePracticeModal from './CreatePracticeModal'
@@ -14,9 +15,9 @@ interface Props {
 }
 
 type Tab = 'students' | 'library' | 'lessons' | 'practices' | 'reviews' | 'settings'
-const GRADES: Grade[] = ['7° Grado','8° Grado','9° Grado','10° Grado','11° Grado','Universitario','Adulto']
+const GRADES: Grade[] = ['7° Grado','8° Grado','9° Grado','10° Grado','11° Grado','Universitario','Adulto','Técnico']
 const LEVELS: Level[] = ['Básico','Intermedio','Avanzado']
-const SUBJECTS: Subject[] = ['Matemáticas','Español','Ciencias','Estudios Sociales','Inglés']
+const SUBJECTS: Subject[] = ['Matemáticas','Español','Ciencias','Estudios Sociales','Inglés','Informática']
 const uid = () => Math.random().toString(36).slice(2, 10)
 
 export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: Props) {
@@ -78,6 +79,8 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
           </>
         )}
       </main>
+
+      <WhatsNewBanner/>
     </div>
   )
 }
@@ -461,6 +464,11 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
   const [saving, setSaving]         = useState(false)
   const hasBranding = profile.addOns.includes('branding')
 
+  // Live preview: update CSS variables as colors are picked
+  useEffect(() => {
+    if (hasBranding) applyTheme(primary, secondary, true)
+  }, [primary, secondary, hasBranding])
+
   const save = async () => {
     setSaving(true)
     try {
@@ -522,6 +530,49 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── WHAT'S NEW BANNER ────────────────────────────────────────────
+const WN_VERSION = 'tn_wn_v2'   // bump this string to show the banner again on next release
+
+const UPDATES = [
+  { emoji: '💻', text: 'Sandbox de código HTML/CSS/JS para Informática' },
+  { emoji: '🎓', text: 'Nuevo grado: Técnico' },
+  { emoji: '📚', text: 'Nueva materia: Informática' },
+  { emoji: '🎨', text: 'Vista previa de colores en tiempo real' },
+]
+
+function WhatsNewBanner() {
+  const [visible, setVisible] = useState(() => !localStorage.getItem(WN_VERSION))
+  const [hiding,  setHiding]  = useState(false)
+
+  const dismiss = () => {
+    setHiding(true)
+    setTimeout(() => {
+      localStorage.setItem(WN_VERSION, '1')
+      setVisible(false)
+    }, 300)
+  }
+
+  if (!visible) return null
+
+  return (
+    <div className={`wn-banner ${hiding ? 'wn-hiding' : ''}`}>
+      <div className="wn-header">
+        <span className="wn-title">✨ Novedades</span>
+        <button className="wn-close" onClick={dismiss} title="Cerrar">✕</button>
+      </div>
+      <ul className="wn-list">
+        {UPDATES.map((u, i) => (
+          <li key={i} className="wn-item">
+            <span className="wn-emoji">{u.emoji}</span>
+            <span>{u.text}</span>
+          </li>
+        ))}
+      </ul>
+            <button className="wn-dismiss-btn" onClick={dismiss}>Entendido 👍</button>
     </div>
   )
 }

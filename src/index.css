@@ -239,11 +239,12 @@ a { color: inherit; text-decoration: none; }
 .pc-meta span { display: flex; align-items: center; gap: 4px; }
 
 .subject-badge { padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }
-.sb-matemáticas { background: #ede9fe; color: #6d28d9; }
-.sb-español { background: #fef9c3; color: #a16207; }
-.sb-ciencias { background: #dcfce7; color: #15803d; }
-.sb-estudios { background: #e0f2fe; color: #0369a1; }
-.sb-inglés { background: #ffe4e6; color: #be123c; }
+.sb-matemáticas  { background: #ede9fe; color: #6d28d9; }
+.sb-español       { background: #fef9c3; color: #a16207; }
+.sb-ciencias      { background: #dcfce7; color: #15803d; }
+.sb-estudios      { background: #e0f2fe; color: #0369a1; }
+.sb-inglés        { background: #ffe4e6; color: #be123c; }
+.sb-informática   { background: #dbeafe; color: #1d4ed8; }
 .done-badge { display: flex; align-items: center; gap: 4px; color: var(--success); font-size: 12px; font-weight: 600; }
 .empty-state {
   text-align: center; padding: 60px 24px; color: var(--muted);
@@ -1167,6 +1168,220 @@ a { color: inherit; text-decoration: none; }
   height: 16px;
   accent-color: var(--teal);
   cursor: pointer;
+}
+
+/* ── What's New Banner ───────────────────────────────────────── */
+.wn-banner {
+  position: fixed;
+  left: 0;
+  bottom: 32px;
+  z-index: 999;
+  width: 230px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-left: none;
+  border-radius: 0 14px 14px 0;
+  box-shadow: 4px 6px 24px rgba(0,0,0,.12);
+  padding: 14px 16px 12px;
+  animation: wn-slide-in .38s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes wn-slide-in {
+  from { transform: translateX(-110%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.wn-hiding {
+  animation: wn-slide-out .28s ease forwards;
+}
+@keyframes wn-slide-out {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-110%); opacity: 0; }
+}
+
+.wn-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.wn-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--coral);
+}
+.wn-close {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.wn-close:hover { background: #f3f4f6; color: var(--ink); }
+
+.wn-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.wn-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.wn-emoji { flex-shrink: 0; font-size: 13px; }
+
+.wn-dismiss-btn {
+  width: 100%;
+  padding: 7px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.wn-dismiss-btn:hover { border-color: var(--coral); color: var(--coral); background: #fef5f3; }
+
+@media (max-width: 480px) {
+  .wn-banner { width: 200px; bottom: 70px; padding: 12px 12px 10px; }
+  .wn-item   { font-size: 11px; }
+}
+
+/* ── Code Sandbox ─────────────────────────────────────────────── */
+.code-sandbox-area {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Language tab bar */
+.code-editor-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  background: #1e293b;
+  padding: 6px 8px 0;
+}
+.code-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: #94a3b8;
+  background: transparent;
+  transition: all .15s;
+}
+.code-tab-btn:hover:not(.active) { color: #e2e8f0; background: rgba(255,255,255,.06); }
+.code-tab-btn.active { background: #0f172a; color: white; }
+.code-tab-preview { margin-left: auto; color: #34d399 !important; }
+.code-tab-preview.active { color: white !important; background: #064e3b !important; }
+
+/* Editor body */
+.code-editor-area {
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+}
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+.code-lang-hint {
+  font-size: 11px;
+  color: #64748b;
+  font-family: 'Courier New', Courier, monospace;
+}
+.code-run-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+}
+.code-run-btn:hover { background: #15803d; }
+
+/* Code textarea */
+.code-textarea {
+  width: 100%;
+  min-height: 200px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  border: none;
+  outline: none;
+  padding: 14px 16px;
+  resize: vertical;
+  caret-color: #38bdf8;
+  tab-size: 2;
+}
+.code-textarea::placeholder { color: #475569; }
+.code-textarea:focus { background: #0d1525; }
+
+/* Preview pane */
+.code-preview-container { display: flex; flex-direction: column; flex: 1; }
+.code-preview-frame {
+  width: 100%;
+  height: 300px;
+  border: none;
+  background: white;
+  display: block;
+}
+.code-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 200px;
+  color: #475569;
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+}
+.code-preview-empty span {
+  font-size: 36px;
+  opacity: .4;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .code-textarea { font-size: 12px; min-height: 160px; }
+  .code-tab-btn  { padding: 5px 10px; font-size: 11px; }
+  .code-preview-frame { height: 220px; }
 }
 
 /* Teacher: canvas image in review */
@@ -2246,3 +2461,4 @@ html, body { overflow-x: hidden; width: 100%; }
 .admin-campaign-error { display:flex; flex-direction:column; }
 .campaign-ok   { color:#059669; font-weight:600; }
 .campaign-fail { color:#DC2626; font-weight:600; }
+

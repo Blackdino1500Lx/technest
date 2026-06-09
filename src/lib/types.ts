@@ -1,5 +1,5 @@
-export type Subject = 'Matemáticas' | 'Español' | 'Ciencias' | 'Estudios Sociales' | 'Inglés'
-export type Grade   = '7° Grado' | '8° Grado' | '9° Grado' | '10° Grado' | '11° Grado' | 'Universitario' | 'Adulto'
+export type Subject = 'Matemáticas' | 'Español' | 'Ciencias' | 'Estudios Sociales' | 'Inglés' | 'Informática'
+export type Grade   = '7° Grado' | '8° Grado' | '9° Grado' | '10° Grado' | '11° Grado' | 'Universitario' | 'Adulto' | 'Técnico'
 export type Level   = 'Básico' | 'Intermedio' | 'Avanzado'
 export type Plan    = 'free' | 'basic'
 

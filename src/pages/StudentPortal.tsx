@@ -173,6 +173,7 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
                       onCanvasChange={v => setCanvasAnswers(prev => ({ ...prev, [q.id]: v }))}
                       flagsRef={antiCheatFlags}
                       placeholder="Escribi tu desarrollo aqui..."
+                      subject={active.subject}
                     />
                   ) : (
                     <textarea className="sp-textarea" rows={4}

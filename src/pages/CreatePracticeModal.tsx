@@ -5,7 +5,7 @@ import { extractTextFromUrl, extractTextFromFile } from '../lib/pdfExtract'
 import { parseQuestionsFromText } from '../lib/pdfParse'
 import { X, Loader2, AlertTriangle, Check, Trash2, Plus, Edit3, Image } from 'lucide-react'
 
-const SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés']
+const SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés', 'Informática']
 
 interface Props {
   lesson?: Lesson          // crear desde lección de la Biblioteca
