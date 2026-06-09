@@ -8,8 +8,8 @@
 import type { Subject, Grade, Level } from './types'
 
 // ── Constantes ───────────────────────────────────────────────────────
-const ALLOWED_SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés']
-const ALLOWED_GRADES:   Grade[]   = ['7° Grado','8° Grado','9° Grado','10° Grado','11° Grado','Universitario','Adulto']
+const ALLOWED_SUBJECTS: Subject[] = ['Matemáticas', 'Español', 'Ciencias', 'Estudios Sociales', 'Inglés', 'Informática']
+const ALLOWED_GRADES:   Grade[]   = ['7° Grado','8° Grado','9° Grado','10° Grado','11° Grado','Universitario','Adulto','Técnico']
 const ALLOWED_LEVELS:   Level[]   = ['Básico','Intermedio','Avanzado']
 
 const ALLOWED_DOC_EXTENSIONS  = ['pdf','doc','docx','ppt','pptx','txt']
