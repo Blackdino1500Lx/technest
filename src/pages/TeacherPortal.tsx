@@ -3,7 +3,7 @@ import { db } from '../lib/db'
 import { auth } from '../lib/auth'
 import { applyTheme } from '../lib/theme'
 import type { TeacherProfile, Student, Lesson, Practice, Submission, Grade, Level, Subject } from '../lib/types'
-import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Library } from 'lucide-react'
+import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Library, LifeBuoy } from 'lucide-react'
 import CreatePracticeModal from './CreatePracticeModal'
 import LibraryTab from './LibraryTab'
 import LessonsTab from './LessonsTab'
@@ -14,7 +14,7 @@ interface Props {
   onSignOut: () => void
 }
 
-type Tab = 'students' | 'library' | 'lessons' | 'practices' | 'reviews' | 'settings'
+type Tab = 'students' | 'library' | 'lessons' | 'practices' | 'reviews' | 'settings' | 'resources'
 const GRADES: Grade[] = ['7° Grado','8° Grado','9° Grado','10° Grado','11° Grado','Universitario','Adulto','Técnico']
 const LEVELS: Level[] = ['Básico','Intermedio','Avanzado']
 const SUBJECTS: Subject[] = ['Matemáticas','Español','Ciencias','Estudios Sociales','Inglés','Informática']
@@ -57,6 +57,7 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
             ['practices', 'Prácticas',  <FileText size={20}/>],
             ['reviews',   'Revisiones', <ClipboardList size={20}/>],
             ['settings',  'Ajustes',    <Settings size={20}/>],
+            ['resources', 'Recursos',   <LifeBuoy size={20}/>],
           ] as [Tab, string, React.ReactNode][]).map(([t, label, icon]) => (
             <button key={t} className={`sidebar-item ${tab===t?'active':''}`} onClick={() => setTab(t)}>
               {icon} <span className="sidebar-label">{label}</span>
@@ -76,6 +77,7 @@ export default function TeacherPortal({ profile, onProfileUpdate, onSignOut }: P
             {tab === 'practices' && <PracticesTab practices={practices} students={students} onReload={loadAll}/>}
             {tab === 'reviews'   && <ReviewsTab   subs={subs} students={students} practices={practices} onReload={loadAll}/>}
             {tab === 'settings'  && <SettingsTab  profile={profile} onProfileUpdate={onProfileUpdate}/>}
+            {tab === 'resources' && <ResourcesTab/>}
           </>
         )}
       </main>
@@ -535,6 +537,115 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
 }
 
 // ── WHAT'S NEW BANNER ────────────────────────────────────────────
+// ── RESOURCES TAB ────────────────────────────────────────────────────
+const DOCS = [
+  {
+    title: 'Guía del Panel del Profesor',
+    desc: 'Manual completo: alumnos, biblioteca, ZIP, imágenes, prácticas, revisiones y ajustes.',
+    file: '/guia_panel_profesor.pdf',
+    icon: '📘',
+  },
+]
+
+type FeedbackType = 'bug' | 'sugerencia' | 'pregunta'
+
+function ResourcesTab() {
+  const [type, setType]     = useState<FeedbackType>('bug')
+  const [msg, setMsg]       = useState('')
+  const [sent, setSent]     = useState(false)
+
+  const handleSend = () => {
+    if (!msg.trim()) return
+    const subjects: Record<FeedbackType, string> = {
+      bug:        '[TeachNest] Reporte de bug',
+      sugerencia: '[TeachNest] Sugerencia de mejora',
+      pregunta:   '[TeachNest] Consulta',
+    }
+    const body = encodeURIComponent(`Tipo: ${type}\n\n${msg}`)
+    const subject = encodeURIComponent(subjects[type])
+    window.open(`mailto:salgueragonzaleze4@gmail.com?subject=${subject}&body=${body}`, '_blank')
+    setSent(true)
+    setMsg('')
+    setTimeout(() => setSent(false), 3000)
+  }
+
+  return (
+    <div className="tab-content">
+      <div className="tab-header"><h2>Recursos docentes</h2></div>
+
+      {/* Documentacion */}
+      <section className="res-section">
+        <h3 className="res-section-title">📚 Documentacion</h3>
+        <div className="res-docs-grid">
+          {DOCS.map((d, i) => (
+            <div key={i} className="res-doc-card">
+              <span className="res-doc-icon">{d.icon}</span>
+              <div className="res-doc-info">
+                <p className="res-doc-title">{d.title}</p>
+                <p className="res-doc-desc">{d.desc}</p>
+              </div>
+              <a
+                className="btn-primary res-doc-btn"
+                href={d.file}
+                target="_blank"
+                rel="noreferrer"
+                download
+              >
+                Descargar PDF
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Feedback */}
+      <section className="res-section">
+        <h3 className="res-section-title">💬 Comentarios y reportes</h3>
+        <p className="res-feedback-hint">
+          ¿Encontraste un bug, tenés una sugerencia o una consulta? Mandános un mensaje directamente.
+        </p>
+        <div className="res-feedback-form">
+          <div className="res-type-row">
+            {(['bug', 'sugerencia', 'pregunta'] as FeedbackType[]).map(t => (
+              <button
+                key={t}
+                className={`res-type-btn ${type === t ? 'active' : ''}`}
+                onClick={() => setType(t)}
+              >
+                {t === 'bug' ? '🐛 Bug' : t === 'sugerencia' ? '💡 Sugerencia' : '❓ Pregunta'}
+              </button>
+            ))}
+          </div>
+          <textarea
+            className="res-textarea"
+            rows={5}
+            value={msg}
+            onChange={e => setMsg(e.target.value)}
+            placeholder={
+              type === 'bug'
+                ? 'Describí qué pasó, qué esperabas que pasara y cómo reproducirlo...'
+                : type === 'sugerencia'
+                ? 'Contános qué mejorarías o qué funcionalidad te gustaría ver...'
+                : 'Escribí tu consulta...'
+            }
+          />
+          <div className="res-feedback-actions">
+            {sent && <span className="res-sent-msg">✅ Abriendo tu cliente de correo...</span>}
+            <button
+              className="btn-primary"
+              onClick={handleSend}
+              disabled={!msg.trim()}
+            >
+              Enviar por correo
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+
 const WN_VERSION = 'tn_wn_v2'   // bump this string to show the banner again on next release
 
 const UPDATES = [
@@ -576,3 +687,4 @@ function WhatsNewBanner() {
     </div>
   )
 }
+

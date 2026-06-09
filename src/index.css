@@ -2461,4 +2461,42 @@ html, body { overflow-x: hidden; width: 100%; }
 .admin-campaign-error { display:flex; flex-direction:column; }
 .campaign-ok   { color:#059669; font-weight:600; }
 .campaign-fail { color:#DC2626; font-weight:600; }
+/* ── Resources Tab ─────────────────────────────────────────────── */
+.res-section { margin-bottom:2rem; }
+.res-section-title { font-size:1rem; font-weight:700; color:#1F2937; margin:0 0 .9rem; }
+
+.res-docs-grid { display:flex; flex-direction:column; gap:.75rem; }
+.res-doc-card {
+  display:flex; align-items:center; gap:1rem;
+  background:#fff; border:1.5px solid var(--border,#E5E0D8);
+  border-radius:12px; padding:1rem 1.25rem;
+}
+.res-doc-icon { font-size:2rem; flex-shrink:0; }
+.res-doc-info { flex:1; min-width:0; }
+.res-doc-title { margin:0 0 .2rem; font-size:.95rem; font-weight:700; color:#1F2937; }
+.res-doc-desc  { margin:0; font-size:.82rem; color:#6B7280; line-height:1.4; }
+.res-doc-btn   { flex-shrink:0; white-space:nowrap; font-size:.82rem; padding:.45rem 1rem; text-decoration:none; }
+
+.res-feedback-hint { font-size:.88rem; color:#6B7280; margin:0 0 1rem; line-height:1.5; }
+.res-feedback-form { background:#fff; border:1.5px solid var(--border,#E5E0D8); border-radius:12px; padding:1.25rem; }
+
+.res-type-row { display:flex; gap:.5rem; margin-bottom:.9rem; flex-wrap:wrap; }
+.res-type-btn {
+  padding:.38rem .9rem; border-radius:20px; font-size:.82rem; font-weight:600;
+  border:1.5px solid var(--border,#E5E0D8); background:#F9FAFB;
+  color:#374151; cursor:pointer; transition:all .15s;
+}
+.res-type-btn:hover { border-color:var(--coral,#E85D3F); color:var(--coral,#E85D3F); }
+.res-type-btn.active { background:var(--coral,#E85D3F); border-color:var(--coral,#E85D3F); color:#fff; }
+
+.res-textarea {
+  width:100%; box-sizing:border-box; border-radius:8px;
+  border:1.5px solid var(--border,#E5E0D8); padding:.7rem .9rem;
+  font-family:inherit; font-size:.88rem; color:#1F2937; line-height:1.5;
+  resize:vertical; outline:none; background:#FAFAFA;
+}
+.res-textarea:focus { border-color:var(--coral,#E85D3F); background:#fff; }
+
+.res-feedback-actions { display:flex; align-items:center; justify-content:flex-end; gap:1rem; margin-top:.75rem; }
+.res-sent-msg { font-size:.85rem; color:#059669; font-weight:600; }
 
