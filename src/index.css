@@ -2499,4 +2499,4 @@ html, body { overflow-x: hidden; width: 100%; }
 
 .res-feedback-actions { display:flex; align-items:center; justify-content:flex-end; gap:1rem; margin-top:.75rem; }
 .res-sent-msg { font-size:.85rem; color:#059669; font-weight:600; }
-
+.res-error-msg { font-size:.85rem; color:#DC2626; font-weight:600; }

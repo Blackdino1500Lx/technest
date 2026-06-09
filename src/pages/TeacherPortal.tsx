@@ -7,6 +7,7 @@ import { LogOut, Users, BookOpen, FileText, ClipboardList, Settings, Plus, Trash
 import CreatePracticeModal from './CreatePracticeModal'
 import LibraryTab from './LibraryTab'
 import LessonsTab from './LessonsTab'
+import { supabase } from '../lib/supabase'
 
 interface Props {
   profile: TeacherProfile
@@ -538,6 +539,7 @@ function SettingsTab({ profile, onProfileUpdate }: { profile: TeacherProfile; on
 
 // ── WHAT'S NEW BANNER ────────────────────────────────────────────
 // ── RESOURCES TAB ────────────────────────────────────────────────────
+
 const DOCS = [
   {
     title: 'Guía del Panel del Profesor',
@@ -552,21 +554,26 @@ type FeedbackType = 'bug' | 'sugerencia' | 'pregunta'
 function ResourcesTab() {
   const [type, setType]     = useState<FeedbackType>('bug')
   const [msg, setMsg]       = useState('')
-  const [sent, setSent]     = useState(false)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+  const [errMsg, setErrMsg] = useState('')
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!msg.trim()) return
-    const subjects: Record<FeedbackType, string> = {
-      bug:        '[TeachNest] Reporte de bug',
-      sugerencia: '[TeachNest] Sugerencia de mejora',
-      pregunta:   '[TeachNest] Consulta',
+    setStatus('sending')
+    setErrMsg('')
+    try {
+      const { error } = await supabase.functions.invoke('send-feedback', {
+        body: { type, message: msg.trim() },
+      })
+      if (error) throw error
+      setStatus('done')
+      setMsg('')
+      setTimeout(() => setStatus('idle'), 4000)
+    } catch (e: any) {
+      setErrMsg(e?.message ?? 'Error al enviar')
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 5000)
     }
-    const body = encodeURIComponent(`Tipo: ${type}\n\n${msg}`)
-    const subject = encodeURIComponent(subjects[type])
-    window.open(`mailto:salgueragonzaleze4@gmail.com?subject=${subject}&body=${body}`, '_blank')
-    setSent(true)
-    setMsg('')
-    setTimeout(() => setSent(false), 3000)
   }
 
   return (
@@ -630,13 +637,14 @@ function ResourcesTab() {
             }
           />
           <div className="res-feedback-actions">
-            {sent && <span className="res-sent-msg">✅ Abriendo tu cliente de correo...</span>}
+            {status === 'done'    && <span className="res-sent-msg">✅ Enviado correctamente.</span>}
+            {status === 'error'   && <span className="res-error-msg">⚠️ {errMsg}</span>}
             <button
               className="btn-primary"
               onClick={handleSend}
-              disabled={!msg.trim()}
+              disabled={!msg.trim() || status === 'sending'}
             >
-              Enviar por correo
+              {status === 'sending' ? 'Enviando...' : 'Enviar reporte'}
             </button>
           </div>
         </div>
