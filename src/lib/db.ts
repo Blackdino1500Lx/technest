@@ -174,13 +174,26 @@ export const db = {
       if (error) throw error; return (data ?? []).map(toSub)
     },
     async add(s: Omit<Submission,'id'|'submittedAt'>): Promise<Submission> {
-      const ins = {
-        teacher_id: s.teacherId, practice_id: s.practiceId, student_id: s.studentId,
-        answers: s.answers, score: s.score ?? null, reviewed: s.reviewed,
-        teacher_note: s.teacherNote ?? null, anti_cheat_flags: s.antiCheatFlags,
+      // Usa RPC con SECURITY DEFINER para bypasear RLS (alumnos no tienen Supabase Auth)
+      const { data: newId, error } = await supabase.rpc('insert_student_submission', {
+        p_teacher_id:       s.teacherId,
+        p_practice_id:      s.practiceId,
+        p_student_id:       s.studentId,
+        p_answers:          s.answers,
+        p_score:            s.score ?? null,
+        p_anti_cheat_flags: s.antiCheatFlags,
+      })
+      if (error) throw error
+      // Fetch the inserted row for the teacher portal
+      const { data, error: e2 } = await supabase
+        .from('submissions').select('*').eq('id', newId).single()
+      if (e2) {
+        // Row inserted but fetch blocked by RLS (normal for anon) — return minimal object
+        return { id: newId, teacherId: s.teacherId, practiceId: s.practiceId,
+          studentId: s.studentId, answers: s.answers, submittedAt: new Date().toISOString(),
+          score: s.score, reviewed: false, antiCheatFlags: s.antiCheatFlags }
       }
-      const { data, error } = await supabase.from('submissions').insert(ins).select().single()
-      if (error) throw error; return toSub(data)
+      return toSub(data)
     },
     async update(s: Submission) {
       const t = await tid()
