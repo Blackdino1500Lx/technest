@@ -52,7 +52,7 @@ function SandboxAnswerView({ value }: { value: string | number | undefined }) {
         </button>
       </div>
       {preview
-        ? <iframe srcDoc={buildPreview(code)} sandbox=allow-scripts title=preview
+        ? <iframe srcDoc={buildPreview(code)} sandbox="allow-scripts" title="preview"
             style={{ width: '100%', height: 180, border: 'none', background: '#fff' }}/>
         : <pre style={{ margin: 0, padding: '10px 12px', background: '#111827', color: '#E5E7EB',
             fontSize: '.78rem', overflowX: 'auto', minHeight: 60, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
