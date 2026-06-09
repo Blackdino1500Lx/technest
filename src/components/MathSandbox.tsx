@@ -19,9 +19,22 @@ function parseCode(v: string): CodeValue {
 
 function serializeCode(c: CodeValue): string { return JSON.stringify(c) }
 
+function extractBodyContent(html: string): string {
+  // Si tiene <body>, extraer solo su contenido
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+  if (bodyMatch) return bodyMatch[1]
+  // Si tiene etiquetas wrapper <html>/<head>, quitarlas
+  return html
+    .replace(/<html[^>]*>/gi, '').replace(/<\/html>/gi, '')
+    .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+    .replace(/<\/?body[^>]*>/gi, '')
+    .trim()
+}
+
 function buildSrcdoc(c: CodeValue): string {
-  const safeJs = c.js.replace(/<\/script>/gi, '<\\/script>')
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${c.css}</style></head><body>${c.html}<script>${safeJs}<\/script></body></html>`
+  const safeJs  = c.js.replace(/<\/script>/gi, '<\\/script>')
+  const bodyHtml = extractBodyContent(c.html)
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${c.css}</style></head><body>${bodyHtml}<script>${safeJs}<\/script></body></html>`
 }
 
 interface Props {
