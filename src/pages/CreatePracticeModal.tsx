@@ -221,7 +221,14 @@ export default function CreatePracticeModal({ lesson, file, initialSubject, stud
                     {/* Sandbox toggle */}
                     <label className="sandbox-toggle-label" style={{ marginTop: 8 }}>
                       <input type="checkbox" checked={q.hasSandbox ?? false}
-                        onChange={e => updateQ(q.id, { hasSandbox: e.target.checked })}/>
+                        onChange={e => {
+                          const on = e.target.checked
+                          updateQ(q.id, {
+                            hasSandbox: on,
+                            type: on ? 'open' : 'multiple',
+                            options: on ? undefined : ['', '', '', ''],
+                          })
+                        }}/>
                       <span>🎨 Habilitar sandbox (texto + dibujo libre)</span>
                     </label>
 
@@ -245,9 +252,21 @@ export default function CreatePracticeModal({ lesson, file, initialSubject, stud
                         </button>
                       </>
                     ) : (
-                      <p style={{ fontSize: '.88rem', color: 'var(--ink)', margin: '.25rem 0 0' }}>
-                        {q.text || <em style={{ color: 'var(--muted)' }}>Sin enunciado</em>}
-                      </p>
+                      <div style={{ marginTop: 4 }}>
+                        <p style={{ fontSize: '.88rem', color: 'var(--ink)', margin: '0 0 6px' }}>
+                          {q.text || <em style={{ color: 'var(--muted)' }}>Sin enunciado</em>}
+                        </p>
+                        {q.type === 'multiple' && q.options && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            {q.options.map((opt, oi) => (
+                              <span key={oi} style={{ fontSize: '.82rem', color: oi === q.correctOption ? 'var(--teal,#1E9E8E)' : 'var(--muted,#6B7280)', display: 'flex', gap: 6 }}>
+                                <strong>{String.fromCharCode(65 + oi)})</strong> {opt || <em>sin texto</em>}
+                                {oi === q.correctOption && <span style={{ fontSize: '.75rem', color: 'var(--teal,#1E9E8E)' }}>✓</span>}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
