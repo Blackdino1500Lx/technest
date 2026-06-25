@@ -56,10 +56,27 @@ export const db = {
       const { error } = await supabase.from('students').delete().eq('id', id).eq('teacher_id', t)
       if (error) throw error
     },
-    async findByPin(pin: string, teacherId: string): Promise<Student | null> {
+    /** Login de alumno seguro vía RPC SECURITY DEFINER.
+     *  No expone las tablas students/teachers ni emails. Devuelve solo el alumno
+     *  que coincide + el branding del aula. */
+    async login(classCode: string, pin: string): Promise<{ student: Student; teacher: any } | null> {
       const cleanPin = validatePin(pin)
-      const { data, error } = await supabase.from('students').select('*').eq('pin', cleanPin).eq('teacher_id', teacherId).maybeSingle()
-      if (error) throw error; return data ? toStudent(data) : null
+      const { data, error } = await supabase.rpc('student_login', { p_class_code: classCode, p_pin: cleanPin })
+      if (error) throw error
+      const row = Array.isArray(data) ? data[0] : data
+      if (!row) return null
+      const student: Student = {
+        id: row.student_id, teacherId: row.teacher_id,
+        firstName: row.first_name, lastName: row.last_name,
+        grade: row.grade, level: row.level, pin: cleanPin, createdAt: '',
+      }
+      const teacher = {
+        id: row.teacher_id, email: '', full_name: '', school_name: row.school_name,
+        plan: row.plan, add_ons: row.add_ons, primary_color: row.primary_color,
+        secondary_color: row.secondary_color, logo_text: row.logo_text,
+        students_limit: 0, created_at: '',
+      }
+      return { student, teacher }
     },
     async isPinTaken(pin: string, excludeId?: string): Promise<boolean> {
       const t = await tid()
@@ -107,10 +124,13 @@ export const db = {
       const { error } = await supabase.from('lessons').delete().eq('id', id).eq('teacher_id', t)
       if (error) throw error
     },
+    /** Lecciones del alumno vía RPC (el servidor omite exam_key y filtra por asignación). */
     async forStudent(studentId: string, teacherId: string): Promise<Lesson[]> {
-      const { data, error } = await supabase.from('lessons').select('*').eq('is_active', true).eq('teacher_id', teacherId)
+      const { data, error } = await supabase.rpc('student_get_lessons', {
+        p_student_id: studentId, p_teacher_id: teacherId,
+      })
       if (error) throw error
-      return (data ?? []).map(toLesson).filter(l => l.assignedTo.includes(studentId))
+      return (data ?? []).map(toLesson)
     },
   },
 
@@ -160,10 +180,13 @@ export const db = {
       const { error } = await supabase.from('practices').delete().eq('id', id).eq('teacher_id', t)
       if (error) throw error
     },
+    /** Prácticas del alumno vía RPC (el servidor elimina correctOption de cada pregunta). */
     async forStudent(studentId: string, teacherId: string): Promise<Practice[]> {
-      const { data, error } = await supabase.from('practices').select('*').eq('is_active', true).eq('teacher_id', teacherId)
+      const { data, error } = await supabase.rpc('student_get_practices', {
+        p_student_id: studentId, p_teacher_id: teacherId,
+      })
       if (error) throw error
-      return (data ?? []).map(toPractice).filter(pr => pr.assignedTo.includes(studentId))
+      return (data ?? []).map(toPractice)
     },
   },
 
@@ -173,27 +196,22 @@ export const db = {
       const { data, error } = await supabase.from('submissions').select('*').eq('teacher_id', t).order('submitted_at', { ascending: false })
       if (error) throw error; return (data ?? []).map(toSub)
     },
-    async add(s: Omit<Submission,'id'|'submittedAt'>): Promise<Submission> {
-      // Usa RPC con SECURITY DEFINER para bypasear RLS (alumnos no tienen Supabase Auth)
-      const { data: newId, error } = await supabase.rpc('insert_student_submission', {
-        p_teacher_id:       s.teacherId,
-        p_practice_id:      s.practiceId,
+    /** Envía la práctica. El PUNTAJE se calcula EN EL SERVIDOR (RPC SECURITY DEFINER);
+     *  el cliente ya no envía el score (no es falsificable) ni necesita correctOption. */
+    async add(s: Omit<Submission,'id'|'submittedAt'|'score'>): Promise<Submission> {
+      const { data, error } = await supabase.rpc('student_submit_practice', {
         p_student_id:       s.studentId,
+        p_practice_id:      s.practiceId,
         p_answers:          s.answers,
-        p_score:            s.score ?? null,
         p_anti_cheat_flags: s.antiCheatFlags,
       })
       if (error) throw error
-      // Fetch the inserted row for the teacher portal
-      const { data, error: e2 } = await supabase
-        .from('submissions').select('*').eq('id', newId).single()
-      if (e2) {
-        // Row inserted but fetch blocked by RLS (normal for anon) — return minimal object
-        return { id: newId, teacherId: s.teacherId, practiceId: s.practiceId,
-          studentId: s.studentId, answers: s.answers, submittedAt: new Date().toISOString(),
-          score: s.score, reviewed: false, antiCheatFlags: s.antiCheatFlags }
+      const row = Array.isArray(data) ? data[0] : data
+      return {
+        id: row?.submission_id, teacherId: s.teacherId, practiceId: s.practiceId,
+        studentId: s.studentId, answers: s.answers, submittedAt: new Date().toISOString(),
+        score: row?.score ?? undefined, reviewed: false, antiCheatFlags: s.antiCheatFlags,
       }
-      return toSub(data)
     },
     async update(s: Submission) {
       const t = await tid()
@@ -207,8 +225,12 @@ export const db = {
       const { error } = await supabase.from('submissions').update(upd).eq('id', s.id).eq('teacher_id', t)
       if (error) throw error
     },
+    /** Vía RPC: el alumno (anónimo) no puede leer la tabla submissions directamente. */
     async exists(studentId: string, practiceId: string): Promise<boolean> {
-      const { data } = await supabase.from('submissions').select('id').eq('student_id', studentId).eq('practice_id', practiceId).maybeSingle()
+      const { data, error } = await supabase.rpc('student_submission_exists', {
+        p_student_id: studentId, p_practice_id: practiceId,
+      })
+      if (error) return false
       return !!data
     },
   },

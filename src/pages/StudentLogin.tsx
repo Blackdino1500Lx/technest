@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
 import type { Student, TeacherProfile } from '../lib/types'
 import StudentPortal from './StudentPortal'
 import { validatePin, ValidationError } from '../lib/validate'
@@ -43,20 +43,12 @@ export default function StudentLogin({ onBack }: Props) {
         setError(e.message); setLoading(false); return
       }
 
-      // 3. Buscar docente por nombre de aula (exacto o parcial, máx 3 resultados)
-      const { data: teachers } = await supabase
-        .from('teachers').select('id,email,full_name,school_name,plan,add_ons,primary_color,secondary_color,logo_text,students_limit,created_at')
-        .ilike('school_name', `%${cleanCode}%`)
-        .limit(3)  // Limitado para evitar enumeración masiva
-
-      let foundStudent: Student | null = null
-      let foundTeacher: any = null
-
-      for (const t of teachers ?? []) {
-        const { data: s } = await supabase
-          .from('students').select('*').eq('pin', cleanPin).eq('teacher_id', t.id).maybeSingle()
-        if (s) { foundStudent = { id: s.id, teacherId: s.teacher_id, firstName: s.first_name, lastName: s.last_name, grade: s.grade, level: s.level, pin: s.pin, createdAt: s.created_at }; foundTeacher = t; break }
-      }
+      // 3. Login vía RPC seguro (SECURITY DEFINER en el servidor).
+      //    No expone las tablas teachers/students ni los emails: la búsqueda del
+      //    aula por nombre y la validación del PIN ocurren en el servidor.
+      const result = await db.students.login(cleanCode, cleanPin)
+      const foundStudent: Student | null = result?.student ?? null
+      const foundTeacher: any = result?.teacher ?? null
 
       if (!foundStudent) {
         // Registrar intento fallido

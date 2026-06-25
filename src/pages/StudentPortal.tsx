@@ -60,14 +60,11 @@ export default function StudentPortal({ student, teacher, onLogout }: Props) {
         value: answers[q.id] ?? '',
         canvasImage: canvasAnswers[q.id],
       }))
-      const mcqs    = active.questions.filter(q => q.type === 'multiple')
-      const correct = mcqs.filter(q => answers[q.id] === q.correctOption).length
-      const total   = mcqs.length
-      const pts     = active.questions.reduce((a, q) => a + (q.points ?? 0), 0)
-      const score   = total > 0 ? Math.round((correct / total) * pts) : undefined
+      // El puntaje se calcula EN EL SERVIDOR (RPC student_submit_practice).
+      // El cliente ya no conoce las respuestas correctas (correctOption no se expone).
       await db.submissions.add({
         teacherId: teacher.id, practiceId: active.id, studentId: student.id,
-        answers: answerArr, score, reviewed: false,
+        answers: answerArr, reviewed: false,
         teacherNote: undefined, antiCheatFlags: antiCheatFlags.current,
       })
       setDone(true)
